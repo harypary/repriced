@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+
+{% block title %}Every AI Tool Price Change We Have Recorded{% endblock %}
+{% block description %}A dated log of every pricing change across {{ stats.tools }} AI and SaaS tools, collected daily from official pricing pages.{% endblock %}
+{% block canonical %}{{ base_url }}/changes/{% endblock %}
+
+{% block content %}
+<article>
+  <header class="page-head">
+    <h1>Full change log</h1>
+    <p class="lede">
+      {{ stats.changes }} pricing {{ 'change' if stats.changes == 1 else 'changes' }} across
+      {{ stats.tools }} tools{% if stats.tracking_since %}, going back to {{ stats.tracking_since|date }}{% endif %}.
+      Newest first. Nothing is ever removed from this list.
+    </p>
+  </header>
+
+  {% if items %}
+  <ul class="changes">
+    {% for item in items %}
+    {{ m.change_row(item, root) }}
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="empty">
+    Nothing recorded yet. The log starts filling the first time a vendor edits its pricing page.
+  </p>
+  {% endif %}
+
+  <p class="muted small">
+    Entries marked <em>Page changed</em> mean the set of prices on the vendor's page moved,
+    but we could not attribute it to a named plan with confidence — usually because the page
+    was restructured. We log it rather than guess at what changed.
+  </p>
+</article>
+{% endblock %}

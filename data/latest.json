@@ -1,0 +1,137 @@
+{
+  "beehiiv": {
+    "checked_at": "2026-08-07T03:10:58.744491+00:00",
+    "http_status": 200,
+    "method": "mixed",
+    "note": "",
+    "ok": true,
+    "plans_expected": 3,
+    "plans_resolved": 1
+  },
+  "claude": {
+    "checked_at": "2026-08-07T03:10:58.744491+00:00",
+    "http_status": 200,
+    "method": "mixed",
+    "note": "",
+    "ok": true,
+    "plans_expected": 4,
+    "plans_resolved": 4
+  },
+  "clickup": {
+    "checked_at": "2026-08-07T03:10:58.744491+00:00",
+    "http_status": 200,
+    "method": "mixed",
+    "note": "",
+    "ok": true,
+    "plans_expected": 3,
+    "plans_resolved": 3
+  },
+  "copy-ai": {
+    "checked_at": "2026-08-07T03:10:58.744491+00:00",
+    "http_status": 200,
+    "method": "text",
+    "note": "",
+    "ok": true,
+    "plans_expected": 4,
+    "plans_resolved": 1
+  },
+  "cursor": {
+    "checked_at": "2026-08-07T03:10:58.744491+00:00",
+    "http_status": 200,
+    "method": "mixed",
+    "note": "",
+    "ok": true,
+    "plans_expected": 5,
+    "plans_resolved": 5
+  },
+  "descript": {
+    "checked_at": "2026-08-07T03:10:58.744491+00:00",
+    "http_status": 200,
+    "method": "jsonld",
+    "note": "",
+    "ok": true,
+    "plans_expected": 4,
+    "plans_resolved": 4
+  },
+  "elevenlabs": {
+    "checked_at": "2026-08-07T03:10:58.744491+00:00",
+    "http_status": 200,
+    "method": "mixed",
+    "note": "",
+    "ok": true,
+    "plans_expected": 5,
+    "plans_resolved": 5
+  },
+  "framer": {
+    "checked_at": "2026-08-07T03:10:58.744491+00:00",
+    "http_status": 200,
+    "method": "jsonld",
+    "note": "",
+    "ok": true,
+    "plans_expected": 3,
+    "plans_resolved": 3
+  },
+  "github-copilot": {
+    "checked_at": "2026-08-07T03:10:58.744491+00:00",
+    "http_status": 200,
+    "method": "mixed",
+    "note": "",
+    "ok": true,
+    "plans_expected": 3,
+    "plans_resolved": 3
+  },
+  "jasper": {
+    "checked_at": "2026-08-07T03:10:58.744491+00:00",
+    "http_status": 200,
+    "method": "mixed",
+    "note": "",
+    "ok": true,
+    "plans_expected": 2,
+    "plans_resolved": 1
+  },
+  "kit": {
+    "checked_at": "2026-08-07T03:10:58.744491+00:00",
+    "http_status": 200,
+    "method": "text",
+    "note": "",
+    "ok": true,
+    "plans_expected": 3,
+    "plans_resolved": 3
+  },
+  "monday": {
+    "checked_at": "2026-08-07T03:10:58.744491+00:00",
+    "http_status": 200,
+    "method": "mixed",
+    "note": "",
+    "ok": true,
+    "plans_expected": 5,
+    "plans_resolved": 1
+  },
+  "notion": {
+    "checked_at": "2026-08-07T03:10:58.744491+00:00",
+    "http_status": 200,
+    "method": "embedded-json",
+    "note": "",
+    "ok": true,
+    "plans_expected": 4,
+    "plans_resolved": 1
+  },
+  "surfer-seo": {
+    "checked_at": "2026-08-07T03:10:58.744491+00:00",
+    "http_status": 200,
+    "method": "text",
+    "note": "",
+    "ok": true,
+    "plans_expected": 3,
+    "plans_resolved": 3
+  },
+  "writesonic": {
+    "checked_at": "2026-08-07T03:10:58.744491+00:00",
+    "http_status": 200,
+    "method": "mixed",
+    "note": "",
+    "ok": true,
+    "plans_expected": 4,
+    "plans_resolved": 4
+  }
+}

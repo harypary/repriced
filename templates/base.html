@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="{{ site.lang }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+{# GitHub Pages は独自レスポンスヘッダーを返せないため meta で指定する。
+   このサイトは自前JSを一切持たないので script-src は 'none' でよい。
+   万一テンプレートにスクリプトが混入しても実行されない保険になる。
+   JSON-LD(application/ld+json)はスクリプトとして実行されないので影響しない。 #}
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src https: data:; style-src 'self'; font-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<title>{% block title %}{{ site.title }}{% endblock %}</title>
+<meta name="description" content="{% block description %}{{ site.description }}{% endblock %}">
+<link rel="canonical" href="{% block canonical %}{{ base_url }}/{% endblock %}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="{{ site.title }}">
+<meta property="og:title" content="{{ self.title() }}">
+<meta property="og:description" content="{{ self.description() }}">
+<meta name="twitter:card" content="summary">
+<link rel="alternate" type="application/rss+xml" title="{{ site.title }} — price changes" href="{{ base_url }}/feed.xml">
+{% if google_site_verification %}
+<!-- Google Search Console の所有権確認。確認後も消さないこと(消すと所有権が外れる) -->
+<meta name="google-site-verification" content="{{ google_site_verification }}">
+{% endif %}
+<link rel="stylesheet" href="{{ root }}assets/style.css">
+{% block head %}{% endblock %}
+</head>
+<body>
+
+{% if demo %}
+{# --demo で生成した成果物。合成した架空の価格が入っている。
+   この状態で公開すると読者に嘘の価格を出すことになるので、
+   目立つ形で残しておく。本番生成(python main.py)では出力されない。 #}
+<div class="demo-bar">
+  DEMO BUILD — every figure on this page is synthetic sample data, not a real price.
+  Do not publish this build.
+</div>
+{% endif %}
+
+{# FTC Endorsement Guides は「消費者が見落とさない位置」での開示を求めている。
+   成果リンクより上、かつ全ページに出す必要がある。絶対に消さないこと。 #}
+<div class="disclosure-bar">
+  <strong>Disclosure:</strong> some links here are affiliate links and we may earn a commission
+  if you sign up through them — at no extra cost to you.
+  <a href="{{ root }}disclosure/">How this is funded</a>
+</div>
+
+<header class="site-header">
+  <a class="brand" href="{{ root }}">{{ site.title }}</a>
+  <p class="tagline">{{ site.tagline }}</p>
+  <nav class="site-nav">
+    <a href="{{ root }}">Home</a>
+    <a href="{{ root }}changes/">All changes</a>
+    <a href="{{ root }}methodology/">How we track</a>
+    <a href="{{ base_url }}/feed.xml">RSS</a>
+  </nav>
+</header>
+
+<main>
+{% block content %}{% endblock %}
+</main>
+
+<footer class="site-footer">
+  <p class="note">
+    Every price on this site is read directly from the vendor's own public pricing page,
+    once per day. We are not affiliated with any vendor listed, and no vendor can pay to
+    change a recorded price. Figures are shown with the date they were last verified —
+    always confirm on the vendor's site before you buy.
+  </p>
+  {% if stats.tracking_since %}
+  <p class="note">
+    Tracking {{ stats.tools }} tools since {{ stats.tracking_since|date }}.
+    {{ stats.changes }} pricing {{ 'change' if stats.changes == 1 else 'changes' }} recorded so far.
+  </p>
+  {% endif %}
+  <nav>
+    <a href="{{ root }}">Home</a>
+    <a href="{{ root }}changes/">All changes</a>
+    <a href="{{ root }}methodology/">Methodology</a>
+    <a href="{{ root }}disclosure/">Disclosure &amp; privacy</a>
+  </nav>
+  <p class="copyright">&copy; {{ now.year }} {{ site.author }} · <a href="{{ site.contact_url }}" rel="nofollow noopener">Contact</a></p>
+</footer>
+
+</body>
+</html>

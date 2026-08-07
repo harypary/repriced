@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+
+{% block title %}{{ site.title }} — Daily-Tracked Pricing for {{ stats.tools }} AI Tools{% endblock %}
+{% block description %}{{ site.description }}{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <h1>Who changed their prices this month?</h1>
+  <p class="lede">
+    We read the official pricing page of {{ stats.tools }} AI and SaaS tools every single day
+    and write down what moved. Not a review site — a record.
+  </p>
+</section>
+
+<section class="panel">
+  <h2>Latest pricing changes</h2>
+  {% if feed %}
+  <ul class="changes">
+    {% for item in feed %}
+    {{ m.change_row(item, root) }}
+    {% endfor %}
+  </ul>
+  <p class="more"><a href="{{ root }}changes/">See the full change log &rarr;</a></p>
+  {% else %}
+  <p class="empty">
+    No changes recorded yet. This page fills up as vendors adjust their pricing —
+    <a href="{{ base_url }}/feed.xml">subscribe to the RSS feed</a> to get them as they happen.
+  </p>
+  {% endif %}
+</section>
+
+{% for label, group in grouped %}
+<section class="panel">
+  <h2>{{ label }}</h2>
+  <table class="overview">
+    <thead>
+      <tr><th>Tool</th><th>Entry price</th><th>Last change</th><th>Verified</th></tr>
+    </thead>
+    <tbody>
+    {% for page in group %}
+      {% set entry = page.state.plans | selectattr('amount', 'ne', None) | rejectattr('is_free') | list %}
+      <tr>
+        <td><a href="{{ root }}{{ page.path }}">{{ page.tool.name }}</a></td>
+        <td class="price">{{ (entry | sort(attribute='amount') | first).display() if entry else '—' }}</td>
+        <td class="muted">
+          {%- if page.state.last_change -%}
+            {{ page.state.last_change.when|date }}
+          {%- else -%}
+            no change recorded
+          {%- endif -%}
+        </td>
+        <td>{{ m.verified(page.state) }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endfor %}
+
+<section class="panel">
+  <h2>How this works</h2>
+  <p>
+    Once a day an automated job fetches each vendor's public pricing page, extracts the
+    figures, and compares them with what we saw last time. If anything moved, it gets a
+    dated entry that stays here permanently. Nothing is estimated and nothing is sponsored —
+    <a href="{{ root }}methodology/">read the full methodology</a>, including what we do
+    when a page can't be parsed.
+  </p>
+</section>
+{% endblock %}

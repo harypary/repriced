@@ -1,0 +1,223 @@
+# 追跡対象のツール一覧。ここがサイトの中身そのもの。
+#
+# 【設計方針】収益ゼロのツールをあえて多く入れている
+#   ChatGPT / Claude / Gemini / Cursor にはアフィリエイトプログラムが無い。
+#   それでも入れるのは、"how much does cursor cost" のような検索が
+#   桁違いに多く、集客の入口になるため。そこから内部リンクで
+#   affiliate.program が埋まっているツールへ送る、という構造で稼ぐ。
+#   全ページをアフィリンクで埋めるとGoogleに「アフィリ目的のみ」と判定される。
+#
+# 【affiliate.url の埋め方】
+#   最初は全て空。サイトを公開 → 各プログラムに申請 → 承認されたら
+#   発行されたリンクをここに貼る。空のままでも通常リンクとして動作するので、
+#   承認待ちの間もサイトは成立する（そこが物販ASPと違う点）。
+#
+# 【plans】
+#   ページ上の表記と一致させる。ここに書いた名前を手がかりに価格を抽出する。
+#   表記が変わったら抽出が外れるので、main.py --check で定期的に確認すること。
+
+categories:
+  assistant:   AI Assistants
+  coding:      Coding & Dev Tools
+  writing:     Writing & Content
+  seo:         SEO & Marketing
+  media:       Audio & Video
+  design:      Design & Web
+  productivity: Productivity
+  publishing:  Newsletters & Publishing
+
+tools:
+  # ---------------------------------------------------------------
+  # 集客担当（アフィリエイトプログラム無し・検索需要が非常に大きい）
+  # ---------------------------------------------------------------
+  - slug: claude
+    name: Claude
+    vendor: Anthropic
+    category: assistant
+    homepage: https://www.anthropic.com/claude
+    pricing_url: https://www.anthropic.com/pricing
+    plans: [Free, Pro, Max, Team]
+    currency: USD
+    affiliate: {program: none, url: "", terms: ""}
+
+  # 【外したツールと理由】main.py --check で実測した結果に基づく。
+  # 戻すときは必ず --check で価格が取れることを確認してから戻すこと。
+  #   gemini      … one.google.com はアクセス元の国で言語と通貨が変わる。
+  #                 日本から見ると円建てになり、USDサイトとして成立しない
+  #   perplexity  … HTMLが13KBの空シェル。価格はログイン後にJSで描画される
+  #   grammarly   … 630KBのHTMLに価格表記が1つも無い(完全にJS描画)
+  #   canva       … 8KBのボット向けシェルが返る
+  #   midjourney  … robots.txt が 403 を返す = RFC 9309 上は全面禁止。
+  #                 methodology で「禁止されたら追わない」と公言している以上、
+  #                 回避策を書くのではなく外すのが筋
+  #   chatgpt     … 価格がHTMLに無く Next.js のストリームにしか出ない。
+  #                 拾える値が実際の掲載価格と一致しなかったため保留。
+  #                 検索需要は最大なので、patterns を書いて戻す価値は高い
+  #   semrush     … 価格を多言語化テンプレート("Starting at ${price}/mo")で
+  #                 持っており、実値はページに存在しない
+  #   webflow     … サイトプランとワークスペースプランが同一ページに混在し、
+  #                 プラン名だけではどちらの価格か判別できない
+
+  - slug: cursor
+    name: Cursor
+    vendor: Anysphere
+    category: coding
+    homepage: https://cursor.com/
+    pricing_url: https://cursor.com/pricing
+    plans: [Hobby, Pro, Pro+, Teams, Ultra]
+    currency: USD
+    affiliate: {program: none, url: "", terms: ""}
+    # このページは schema.org の Offer をそのまま出しているので、
+    # 本文の近傍探索より構造化データを直接読んだ方が確実。
+    # 近傍探索だと無料の Hobby に Pro の $20 が入ってしまう。
+    # extract.py が価格キーを "price: $20" の形に正規化してから当たる。
+    patterns:
+      Hobby:  'name: Hobby\s*\n\s*price: \$?([\d.]+)'
+      Pro:    'name: Pro\s*\n\s*price: \$?([\d.]+)'
+      Pro+:   'name: Pro\+\s*\n\s*price: \$?([\d.]+)'
+      Teams:  'name: Teams\s*\n\s*price: \$?([\d.]+)'
+      Ultra:  'name: Ultra\s*\n\s*price: \$?([\d.]+)'
+
+  - slug: github-copilot
+    name: GitHub Copilot
+    vendor: GitHub
+    category: coding
+    homepage: https://github.com/features/copilot
+    pricing_url: https://github.com/features/copilot/plans
+    # Business / Enterprise は外してある。このページは316KBあり、
+    # ナビゲーションやフッターに Business/Enterprise の語が140回以上出るため、
+    # 近傍探索がプランカードではない場所の数字($100)を掴む。
+    # 正しい値を出したければ patterns を書いてから戻すこと。
+    plans: [Free, Pro, Pro+]
+    currency: USD
+    affiliate: {program: none, url: "", terms: ""}
+
+  # ---------------------------------------------------------------
+  # 収益担当（アフィリエイトプログラムあり）
+  #   program は申請先。承認後に url を埋める。
+  #   terms は「承認画面に表示された条件」を自分で書き写すこと。
+  #   ここに推測を書くと、サイト上で読者に誤った情報を出すことになる。
+  # ---------------------------------------------------------------
+  - slug: notion
+    name: Notion
+    vendor: Notion Labs
+    category: productivity
+    homepage: https://www.notion.com/
+    pricing_url: https://www.notion.com/pricing
+    plans: [Free, Plus, Business, Enterprise]
+    currency: USD
+    affiliate: {program: direct, url: "", terms: ""}
+
+  - slug: clickup
+    name: ClickUp
+    vendor: ClickUp
+    category: productivity
+    homepage: https://clickup.com/
+    pricing_url: https://clickup.com/pricing
+    # Enterprise は「要問い合わせ」で定価が無い。載せると近傍の数字を拾う
+    plans: [Free Forever, Unlimited, Business]
+    currency: USD
+    affiliate: {program: direct, url: "", terms: ""}
+
+  - slug: monday
+    name: monday.com
+    vendor: monday.com
+    category: productivity
+    homepage: https://monday.com/
+    pricing_url: https://monday.com/pricing
+    plans: [Free, Basic, Standard, Pro, Enterprise]
+    currency: USD
+    affiliate: {program: partnerstack, url: "", terms: ""}
+
+  - slug: jasper
+    name: Jasper
+    vendor: Jasper AI
+    category: writing
+    homepage: https://www.jasper.ai/
+    pricing_url: https://www.jasper.ai/pricing
+    plans: [Pro, Business]
+    currency: USD
+    affiliate: {program: partnerstack, url: "", terms: ""}
+
+  - slug: copy-ai
+    name: Copy.ai
+    vendor: Copy.ai
+    category: writing
+    homepage: https://www.copy.ai/
+    pricing_url: https://www.copy.ai/prices
+    plans: [Free, Starter, Advanced, Enterprise]
+    currency: USD
+    affiliate: {program: direct, url: "", terms: ""}
+
+  - slug: writesonic
+    name: Writesonic
+    vendor: Writesonic
+    category: writing
+    homepage: https://writesonic.com/
+    pricing_url: https://writesonic.com/pricing
+    # ページ実測(2026-08)の表記。Lite/Standard/Professional は現行では存在しない
+    plans: [Free, Starter, Basic, Growth]
+    currency: USD
+    affiliate: {program: direct, url: "", terms: ""}
+
+  - slug: surfer-seo
+    name: Surfer SEO
+    vendor: Surfer
+    category: seo
+    homepage: https://surferseo.com/
+    pricing_url: https://surferseo.com/pricing/
+    # このページは通貨記号を使わず "99 USD / per month" と書く。
+    # extract.py の 'NN USD' 対応が無いと1件も取れない
+    plans: [Discovery, Standard, Pro]
+    currency: USD
+    affiliate: {program: direct, url: "", terms: ""}
+
+  - slug: elevenlabs
+    name: ElevenLabs
+    vendor: ElevenLabs
+    category: media
+    homepage: https://elevenlabs.io/
+    pricing_url: https://elevenlabs.io/pricing
+    plans: [Free, Starter, Creator, Pro, Scale]
+    currency: USD
+    affiliate: {program: direct, url: "", terms: ""}
+
+  - slug: descript
+    name: Descript
+    vendor: Descript
+    category: media
+    homepage: https://www.descript.com/
+    pricing_url: https://www.descript.com/pricing
+    plans: [Free, Hobbyist, Creator, Business]
+    currency: USD
+    affiliate: {program: direct, url: "", terms: ""}
+
+  - slug: framer
+    name: Framer
+    vendor: Framer
+    category: design
+    homepage: https://www.framer.com/
+    pricing_url: https://www.framer.com/pricing/
+    plans: [Free, Basic, Pro]
+    currency: USD
+    affiliate: {program: direct, url: "", terms: ""}
+
+  - slug: beehiiv
+    name: beehiiv
+    vendor: beehiiv
+    category: publishing
+    homepage: https://www.beehiiv.com/
+    pricing_url: https://www.beehiiv.com/pricing
+    plans: [Launch, Scale, Max]
+    currency: USD
+    affiliate: {program: direct, url: "", terms: ""}
+
+  - slug: kit
+    name: Kit
+    vendor: Kit (ConvertKit)
+    category: publishing
+    homepage: https://kit.com/
+    pricing_url: https://kit.com/pricing
+    plans: [Newsletter, Creator, Pro]
+    currency: USD
+    affiliate: {program: direct, url: "", terms: ""}

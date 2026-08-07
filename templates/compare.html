@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+
+{% block title %}{{ page.title }}{% endblock %}
+{% block description %}{{ page.description }}{% endblock %}
+{% block canonical %}{{ base_url }}/{{ page.path }}{% endblock %}
+
+{% block content %}
+<article>
+  <header class="page-head">
+    <p class="crumb"><a href="{{ root }}">Home</a> / Comparison</p>
+    <h1>{{ page.left.tool.name }} vs {{ page.right.tool.name }}: pricing</h1>
+    <p class="lede">
+      Both figures below come from the vendors' own pricing pages, read by the same script
+      on the same schedule — so they are comparable on the same date, which is the one thing
+      most comparison pages get wrong.
+    </p>
+  </header>
+
+  <section class="versus">
+    {% for side in [page.left, page.right] %}
+    <div class="versus-col">
+      <h2><a href="{{ root }}{{ side.path }}">{{ side.tool.name }}</a></h2>
+      <p>{{ m.verified(side.state) }}</p>
+      {% if side.state.stale %}
+      <p class="warn small">Prices unconfirmed — see the tool page for the last known figures.</p>
+      {% else %}
+      {{ m.plan_table(side, compact=True) }}
+      {% endif %}
+      {% set real = side.state.changes | rejectattr('kind', 'eq', 'first_seen') | list %}
+      <p class="muted small">
+        {{ real | length }} recorded {{ 'change' if real|length == 1 else 'changes' }}.
+        {% if side.state.last_change %}Last moved {{ side.state.last_change.when|date }}.{% endif %}
+      </p>
+      <p class="cta-wrap">{{ m.cta(side.tool) }}</p>
+    </div>
+    {% endfor %}
+  </section>
+
+  <section>
+    <h2>Which one has moved more?</h2>
+    {% set left_changes = page.left.state.changes | rejectattr('kind', 'eq', 'first_seen') | list %}
+    {% set right_changes = page.right.state.changes | rejectattr('kind', 'eq', 'first_seen') | list %}
+    <p>
+      Since we started tracking, {{ page.left.tool.name }} has changed its pricing
+      {{ left_changes | length }} {{ 'time' if left_changes|length == 1 else 'times' }} and
+      {{ page.right.tool.name }} {{ right_changes | length }}
+      {{ 'time' if right_changes|length == 1 else 'times' }}.
+      {% if left_changes and right_changes %}
+      That matters if you are budgeting more than a quarter ahead: a tool that reprices often
+      is a tool whose current sticker price is the least reliable part of the comparison.
+      {% endif %}
+    </p>
+    {% set merged = (left_changes + right_changes) | sort(attribute='ts', reverse=True) %}
+    {% if merged %}
+    <table class="history">
+      <thead><tr><th>Date</th><th>Tool</th><th>Plan</th><th>Was</th><th>Became</th></tr></thead>
+      <tbody>
+      {% for change in merged[:16] %}
+        {% set tool = page.left.tool if change.slug == page.left.tool.slug else page.right.tool %}
+        <tr class="row-{{ change.kind }}">
+          <td><time datetime="{{ change.when|iso }}">{{ change.when|date }}</time></td>
+          <td>{{ tool.name }}</td>
+          <td>{{ change.plan or '—' }}</td>
+          <td>{{ change.before_display }}</td>
+          <td>{{ change.after_display }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+  </section>
+
+  <p class="muted small">
+    We do not rank these tools against each other on features. There are plenty of opinion
+    pieces for that; what is missing on the web is a dated, verifiable record of what each
+    one actually costs. That is all this page claims to be.
+  </p>
+</article>
+{% endblock %}

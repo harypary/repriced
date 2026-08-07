@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Affiliate Disclosure, Privacy and Terms{% endblock %}
+{% block description %}How this site makes money, what data it collects (almost none), and the limits of what the published figures guarantee.{% endblock %}
+{% block canonical %}{{ base_url }}/disclosure/{% endblock %}
+
+{% block content %}
+<article class="prose">
+  <header class="page-head">
+    <h1>Disclosure, privacy and terms</h1>
+  </header>
+
+  {# FTC 16 CFR Part 255。開示は「明瞭で目立つ」必要があり、
+     成果リンクを含む全ページの上部バナー(base.html)と合わせて機能する。
+     このページ単体では要件を満たさないので、バナーを消さないこと。 #}
+  <h2>Affiliate disclosure</h2>
+  <p>
+    Some outbound links on this site are affiliate links. If you subscribe to a tool after
+    following one, the vendor may pay us a commission. You pay exactly the same price either
+    way. Links that earn us a commission are labelled <em>affiliate link</em> at the point
+    you click them, and every page carries the disclosure banner at the top.
+  </p>
+  <p>
+    {% set earning = tool_pages | selectattr('tool.affiliate.is_monetized') | list %}
+    {% if earning %}
+    We currently have an affiliate relationship with
+    {% for page in earning %}<a href="{{ root }}{{ page.path }}">{{ page.tool.name }}</a>{{ ", " if not loop.last }}{% endfor %}.
+    The remaining {{ (tool_pages | length) - (earning | length) }} tools on this site earn us
+    nothing and are tracked anyway.
+    {% else %}
+    We do not currently have an affiliate relationship with any tool listed here. Every tool
+    on this site is tracked because it is worth tracking, not because it pays.
+    {% endif %}
+  </p>
+  <p>
+    <strong>What commission does not buy:</strong> inclusion, exclusion, ordering, a better
+    price, or a softer entry in the change log. The figures are produced by a script that has
+    no knowledge of which vendors pay us. That is not a promise about our character; it is a
+    property of how the code is written, and
+    <a href="{{ root }}methodology/">the method is published</a> so you can judge it.
+  </p>
+
+  <h2>Not advice</h2>
+  <p>
+    Nothing here is purchasing, financial, or legal advice. Prices change without notice,
+    regional pricing differs, and we can be wrong. Always confirm the current price on the
+    vendor's own site before you commit to anything. Every figure is published with the date
+    it was last verified precisely so you can judge how much to trust it.
+  </p>
+
+  <h2>Privacy</h2>
+  <p>
+    This site is static HTML. It sets no cookies, runs no JavaScript, embeds no analytics,
+    no advertising tags, no fonts or images from third parties, and no tracking pixels. We
+    do not collect, store, or sell any personal data because we have no mechanism to.
+  </p>
+  <p>
+    Two things do happen outside our control. Our host serves the pages and may keep standard
+    server logs. And if you click an outbound link, the destination site — including any
+    affiliate network in between — will see that visit and may set its own cookies under its
+    own privacy policy. Outbound links carry
+    <code>rel="nofollow sponsored noopener"</code> and a
+    <code>strict-origin-when-cross-origin</code> referrer policy, so the page you came from
+    is not passed along in full.
+  </p>
+
+  <h2>Trademarks</h2>
+  <p>
+    All product names, logos and brands are the property of their respective owners and are
+    used here for identification only. This site is independent and is not affiliated with,
+    endorsed by, or sponsored by any of the vendors listed, including those whose affiliate
+    programmes we participate in.
+  </p>
+
+  <h2>Contact</h2>
+  <p>
+    Corrections, takedown requests, and crawl complaints:
+    <a href="{{ site.contact_url }}" rel="nofollow noopener">{{ site.contact_url }}</a>.
+    Operated by {{ site.author }} as an individual.
+  </p>
+</article>
+{% endblock %}

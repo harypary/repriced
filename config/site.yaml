@@ -1,0 +1,43 @@
+# サイト全体の設定。運用で触るのはこのファイルと tools.yaml の2つだけ。
+
+site:
+  lang: en
+  title: Repriced
+  tagline: Every AI tool price change, on the day it happened.
+  description: >-
+    We read the official pricing page of every major AI and SaaS tool once a day and
+    record what moved. Current plans, dated price history, and who raised prices this month.
+  author: harypary
+  # フッターとFTC開示に出る連絡先。クローラ側にも User-Agent として送るので実在させること。
+  # 苦情の窓口が無いクローラは問答無用でブロックされる。実在を確認済み。
+  contact_url: https://github.com/harypary
+
+generation:
+  # 価格ページの取得間隔(秒)。同一ホストへの連続アクセスを避けるための最低値。
+  # 1未満にしないこと。相手のサーバに負荷をかけると単純にブロックされる。
+  request_interval_sec: 2.0
+  # 1リクエストのタイムアウト(秒)
+  timeout_sec: 20
+  # 取得に失敗したツールを何日まで「最後に確認できた値」として掲載し続けるか。
+  # これを超えたら価格を伏せて「確認できていません」と表示する。古い価格を
+  # 現在価格として出し続けるのは読者を騙すことになるので必ず期限を切る。
+  stale_after_days: 14
+  # トップページに出す「最近の変更」の件数
+  recent_changes: 30
+  # 価格履歴テーブルに出す最大行数
+  history_rows: 24
+
+# 比較ページはここに書いたペアだけを生成する。
+# 全組み合わせを自動生成すると Google の scaled content abuse に該当するため、
+# 「実際に検索されている組み合わせ」だけを手で選ぶこと。
+# Search Console で表示回数が付いた組み合わせを後から足していくのが正しい増やし方。
+comparisons:
+  - [cursor, github-copilot]
+  - [notion, clickup]
+  - [notion, monday]
+  - [clickup, monday]
+  - [jasper, copy-ai]
+  - [jasper, writesonic]
+  - [copy-ai, writesonic]
+  - [descript, elevenlabs]
+  - [beehiiv, kit]

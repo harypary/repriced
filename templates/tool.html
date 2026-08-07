@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+
+{% block title %}{{ page.title }}{% endblock %}
+{% block description %}{{ page.description }}{% endblock %}
+{% block canonical %}{{ base_url }}/{{ page.path }}{% endblock %}
+
+{% block head %}
+{% set priced = page.state.plans | selectattr('amount', 'ne', None) | rejectattr('is_free') | list %}
+{% if not page.state.stale and priced %}
+{# 構造化データ。価格は verified_at 時点のものなので priceValidUntil を付けず、
+   確認日を description に含めて誤解を避ける。 #}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": {{ page.tool.name | tojson }},
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "Web",
+  "url": {{ page.tool.homepage | tojson }},
+  "offers": [
+    {% for plan in priced %}
+    {
+      "@type": "Offer",
+      "name": {{ plan.plan | tojson }},
+      "price": "{{ '%.2f' % plan.amount }}",
+      "priceCurrency": {{ page.tool.currency | tojson }},
+      "availability": "https://schema.org/InStock"
+    }{{ "," if not loop.last }}
+    {% endfor %}
+  ]
+}
+</script>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<article>
+  <header class="page-head">
+    <p class="crumb"><a href="{{ root }}">Home</a> / {{ page.category_name }}</p>
+    <h1>{{ page.tool.name }} pricing</h1>
+    <p class="lede">
+      {{ page.tool.name }}{% if page.tool.vendor %} by {{ page.tool.vendor }}{% endif %}.
+      We check
+      <a href="{{ page.tool.pricing_url }}" rel="nofollow noopener" target="_blank">the official pricing page</a>
+      once a day.
+      {{ m.verified(page.state) }}
+    </p>
+  </header>
+
+  {% if page.state.stale %}
+  <p class="warn">
+    We have not been able to confirm {{ page.tool.name }}'s prices
+    {% if page.state.verified_at %}since {{ page.state.verified_at|date }}{% endif %},
+    so we are not showing figures that might be wrong.
+    {% if page.state.note %}<br><span class="muted">Reason: {{ page.state.note }}</span>{% endif %}
+    The change history below is still accurate up to that date.
+  </p>
+  {% else %}
+  <section>
+    <h2>Current plans</h2>
+    {{ m.plan_table(page) }}
+    {% set unresolved = page.state.plans | selectattr('amount', 'none') | list %}
+    {% if unresolved %}
+    <p class="muted small">
+      We could not isolate a figure for
+      {% for plan in unresolved %}{{ plan.plan }}{{ ", " if not loop.last }}{% endfor %}
+      on the last check. Rather than guess, we leave it blank.
+    </p>
+    {% endif %}
+    <p class="cta-wrap">{{ m.cta(page.tool, "See " ~ page.tool.name ~ " plans") }}</p>
+  </section>
+  {% endif %}
+
+  <section>
+    <h2>Price history</h2>
+    {% set real = page.state.changes | rejectattr('kind', 'eq', 'first_seen') | list %}
+    {% if real %}
+    <p>
+      {{ real | length }} recorded {{ 'change' if real|length == 1 else 'changes' }}
+      {% if page.state.tracked_since %}since {{ page.state.tracked_since|date }}{% endif %}.
+    </p>
+    <table class="history">
+      <thead>
+        <tr><th>Date</th><th>Plan</th><th>Was</th><th>Became</th><th>Change</th></tr>
+      </thead>
+      <tbody>
+      {% for change in real[:history_rows] %}
+        <tr class="row-{{ change.kind }}">
+          <td><time datetime="{{ change.when|iso }}">{{ change.when|date }}</time></td>
+          <td>{{ change.plan or '—' }}</td>
+          <td>{{ change.before_display }}</td>
+          <td>{{ change.after_display }}</td>
+          <td class="delta">
+            {%- if change.pct is not none -%}
+              {{ '%+.0f' % change.pct }}%
+            {%- elif change.kind == 'page' -%}
+              page edited
+            {%- else -%}
+              —
+            {%- endif -%}
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% if real | length > history_rows %}
+    <p class="muted small">Showing the {{ history_rows }} most recent of {{ real|length }}.</p>
+    {% endif %}
+    {% else %}
+    <p class="empty">
+      No changes since we started tracking
+      {% if page.state.tracked_since %}on {{ page.state.tracked_since|date }}{% endif %}.
+      {{ page.tool.name }} has held its pricing steady for
+      {{ page.state.observations }} recorded {{ 'check' if page.state.observations == 1 else 'checks' }}.
+    </p>
+    {% endif %}
+  </section>
+
+  {% if page.tool.affiliate.is_monetized and page.tool.affiliate.terms %}
+  <p class="muted small">
+    We earn a commission if you subscribe through our link ({{ page.tool.affiliate.terms }}).
+    It costs you nothing extra and it does not influence the numbers above — those are read
+    from {{ page.tool.vendor or page.tool.name }}'s own page by a script.
+  </p>
+  {% endif %}
+
+  <section>
+    <h2>Related tools</h2>
+    <ul class="related">
+    {% for other in related %}
+      <li>
+        <a href="{{ root }}{{ other.path }}">{{ other.tool.name }}</a>
+        <span class="muted">{{ other.category_name }}</span>
+      </li>
+    {% endfor %}
+    </ul>
+  </section>
+</article>
+{% endblock %}

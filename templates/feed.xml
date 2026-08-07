@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+  <title>{{ site.title }} — price changes</title>
+  <link>{{ base_url }}/</link>
+  <atom:link href="{{ base_url }}/feed.xml" rel="self" type="application/rss+xml"/>
+  <description>Every recorded pricing change across the AI and SaaS tools we track, as it happens.</description>
+  <language>{{ site.lang }}</language>
+  <lastBuildDate>{{ now|rfc822 }}</lastBuildDate>
+{# 変更が起きた時だけ更新されるフィードは購読する価値がある。
+   検索流入に依存しない直接の流入経路になるので、記事一覧ではなく
+   変更イベントを流すこと。 #}
+{% for item in feed %}
+  <item>
+    <title>{{ item.headline }}</title>
+    <link>{{ base_url }}/{{ item.path }}</link>
+    <guid isPermaLink="false">{{ item.tool.slug }}-{{ item.change.kind }}-{{ item.change.plan }}-{{ item.change.ts }}</guid>
+    <pubDate>{{ item.when|rfc822 }}</pubDate>
+    <description>{{ item.headline }}. Verified against {{ item.tool.name }}'s official pricing page.</description>
+  </item>
+{% endfor %}
+</channel>
+</rss>

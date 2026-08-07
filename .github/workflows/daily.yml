@@ -1,0 +1,97 @@
+name: 毎日価格を巡回してサイトを更新
+
+on:
+  schedule:
+    # UTC 07:00。米国の営業時間前に回す。値上げの告知は米国時間の朝に出ることが多く、
+    # 「その日のうちに記録されている」状態を作るのがこのサイトの価値になる。
+    - cron: "0 7 * * *"
+  workflow_dispatch: {}
+  push:
+    branches: [main]
+    paths:
+      - "config/**"
+      - "templates/**"
+      - "static/**"
+      - "src/**"
+      - "main.py"
+
+permissions:
+  # contents: write は価格履歴(data/)をリポジトリに書き戻すために必須。
+  # ここを read にすると毎回まっさらな状態から始まり、履歴が永久に溜まらない。
+  # このサイトの資産は履歴そのものなので、この権限がサイトの生死を分ける。
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false   # 履歴のコミットを途中で殺さない
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # アクションはタグではなくコミットSHAで固定する。
+      # タグは付け替え可能なので、@v7 のままだと参照先の中身を差し替えられ得る。
+      # 更新は .github/dependabot.yml が出すPRで行う（コメントのバージョンも追随する）
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      # 固定したバージョン以外を絶対に入れない
+      - run: pip install --no-deps -r requirements.txt
+
+      - name: 価格ページを巡回してサイトを生成
+        env:
+          SITE_BASE_URL: ${{ vars.SITE_BASE_URL }}
+          # 公開ページのmetaタグに出る値なので Secret ではなく Variable でよい
+          GOOGLE_SITE_VERIFICATION: ${{ vars.GOOGLE_SITE_VERIFICATION }}
+        run: python main.py
+
+      # 開示バーの消失・リンク切れ・DEMOデータの混入を検出する。
+      # ここで落とせば壊れた状態がPagesに出ることはない。
+      # 生成の直後・アップロードの前に置くこと。
+      - name: 生成物を検証する
+        env:
+          SITE_BASE_URL: ${{ vars.SITE_BASE_URL }}
+        run: python main.py --verify
+
+      - name: 価格履歴をコミットする
+        run: |
+          set -euo pipefail
+          git config user.name  "price-tracker[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/
+          if git diff --cached --quiet; then
+            echo "価格に変更なし。コミットするものはありません。"
+            exit 0
+          fi
+          git commit -m "chore(data): 価格を記録 $(date -u +%Y-%m-%d)"
+          # 手元のpushと衝突したときのために。data/ は追記のみなので rebase で解決できる
+          for attempt in 1 2 3; do
+            if git push; then exit 0; fi
+            echo "push に失敗しました。取り込んで再試行します ($attempt/3)"
+            git pull --rebase --autostash
+          done
+          # ここで job を落とさない。push できなくても生成済みのサイトは正しいので
+          # デプロイは通す。今回の観測は失われるが、次回の巡回で同じ差分が
+          # 再検出されるため履歴に穴は空かない(記録日が1日ずれるだけ)。
+          echo "::warning::価格履歴を push できませんでした。次回実行で再記録されます"
+
+      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: docs
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5.0.0

@@ -1,0 +1,59 @@
+{# 共通パーツ。成果リンクの rel と開示表記をここに集約して、
+   テンプレートを増やしたときに付け忘れが起きないようにする。 #}
+
+{% macro cta(tool, label=None) -%}
+<a class="cta{% if tool.affiliate.is_monetized %} cta-affiliate{% endif %}"
+   href="{{ tool.outbound_url }}" rel="{{ tool.rel }}" target="_blank">
+  {{ label or ('Visit ' ~ tool.name) }}
+  {%- if tool.affiliate.is_monetized %} <span class="cta-tag">affiliate link</span>{% endif %}
+</a>
+{%- endmacro %}
+
+{% macro verified(state) -%}
+{% if state.stale %}
+<span class="badge badge-stale" title="We could not confirm this price recently, so we are not showing it.">
+  Unverified
+</span>
+{% else %}
+<span class="badge badge-ok">Verified {{ state.verified_at|date }}</span>
+{% endif %}
+{%- endmacro %}
+
+{% macro plan_table(page, compact=False) -%}
+<table class="plans">
+  <thead>
+    <tr><th>Plan</th><th>Price</th>{% if not compact %}<th>Billing</th>{% endif %}</tr>
+  </thead>
+  <tbody>
+  {% for plan in page.state.plans %}
+    <tr{% if plan.confidence == 'low' %} class="low-confidence"{% endif %}>
+      <td>{{ plan.plan }}</td>
+      <td class="price">{{ plan.display() }}</td>
+      {% if not compact %}
+      <td class="muted">
+        {%- if plan.amount is none -%}
+          not detected
+        {%- elif plan.is_free -%}
+          no charge
+        {%- elif plan.period -%}
+          per {{ plan.period }}
+        {%- else -%}
+          —
+        {%- endif -%}
+      </td>
+      {% endif %}
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{%- endmacro %}
+
+{# headline はツール名から始まる完全な一文なので、行全体をリンクにする。
+   ツール名を別に出すと "Jasper Jasper raised..." のように二重になる。 #}
+{% macro change_row(item, root) -%}
+<li class="change change-{{ item.change.kind }}">
+  <time class="change-date" datetime="{{ item.when|iso }}">{{ item.when|date }}</time>
+  <span class="change-badge">{{ item.badge }}</span>
+  <a class="change-text" href="{{ root }}{{ item.path }}">{{ item.headline }}</a>
+</li>
+{%- endmacro %}

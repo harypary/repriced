@@ -1,0 +1,15 @@
+version: 2
+updates:
+  # requirements.txt はバージョンを完全固定しているので、
+  # 更新はここが出すPRで行う。手で上げないこと。
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+
+  # ワークフローのアクションはコミットSHAで固定してある。
+  # dependabot はSHAを更新し、隣のコメントのバージョン表記も直してくれる。
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

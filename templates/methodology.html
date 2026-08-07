@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}How We Track AI Tool Pricing — Methodology{% endblock %}
+{% block description %}Exactly how these prices are collected, how often, what we do when a page cannot be parsed, and what we refuse to publish.{% endblock %}
+{% block canonical %}{{ base_url }}/methodology/{% endblock %}
+
+{% block content %}
+<article class="prose">
+  <header class="page-head">
+    <h1>Methodology</h1>
+    <p class="lede">
+      A price is only worth anything if you know where it came from and when.
+      Here is the whole process, including the parts that fail.
+    </p>
+  </header>
+
+  <h2>Collection</h2>
+  <p>
+    Once every 24 hours an automated job requests the public pricing page of each tracked
+    tool. It identifies itself with a named user agent and a contact URL, reads
+    <code>robots.txt</code> before every host it touches, honours any
+    <code>Crawl-delay</code> the site declares, and never issues more than one request
+    every {{ generation.request_interval_sec | round | int }} seconds to the same host.
+    If a site disallows us, we stop tracking it rather than work around it.
+  </p>
+
+  <h2>Extraction</h2>
+  <p>
+    From each page we pull two things:
+  </p>
+  <ol>
+    <li>
+      <strong>A signature</strong> — the complete set of price figures present on the page,
+      hashed. This is deliberately crude, and that is why it is reliable: it detects that
+      something moved even when the page has been redesigned.
+    </li>
+    <li>
+      <strong>Per-plan figures</strong> — the amount nearest to each plan name. This is
+      best-effort. Pricing pages are marketing pages, not APIs, and they are not built to
+      be read by machines.
+    </li>
+  </ol>
+  <p>
+    When the two disagree — the signature moved but we cannot say which plan changed —
+    the entry is logged as <em>Page changed</em> and nothing more is claimed.
+  </p>
+
+  <h2>What we will not do</h2>
+  <ul>
+    <li>
+      <strong>We do not estimate.</strong> If a figure was not on the page, the cell is
+      blank. A plausible-looking wrong price is worse than no price.
+    </li>
+    <li>
+      <strong>We do not show stale prices as current.</strong> If we have not been able to
+      confirm a tool's pricing for {{ generation.stale_after_days }} days, the figures are
+      hidden and the page says so. The history stays, because history does not go stale.
+    </li>
+    <li>
+      <strong>We do not let money touch the numbers.</strong> Some tools here pay us a
+      commission and some have no affiliate programme at all. Both are collected by the
+      same script, on the same schedule, and shown the same way. A vendor cannot pay to be
+      listed, delisted, ranked, or corrected.
+    </li>
+  </ul>
+
+  <h2>Why prices are missing sometimes</h2>
+  <p>
+    An increasing number of vendors render pricing entirely in JavaScript, or hide it behind
+    a region selector or a sales call. We do not execute JavaScript and we do not log in.
+    When that is the case, the tool page will say the price could not be detected — which is
+    itself a useful fact about that vendor.
+  </p>
+
+  <h2>Currency and billing period</h2>
+  <p>
+    Figures are the USD list price as shown to a visitor with no discount applied. Where a
+    page defaults to annual billing, the annual rate is what gets recorded, and the table
+    marks it as such. Local taxes, regional pricing, and negotiated enterprise rates are out
+    of scope.
+  </p>
+
+  <h2>Corrections</h2>
+  <p>
+    If a recorded figure is wrong, that is a bug and we want to know.
+    <a href="{{ site.contact_url }}" rel="nofollow noopener">Report it here</a> — include the
+    tool and the date. Corrections are made to the collection logic, not by hand-editing the
+    history, so the same mistake stops recurring.
+  </p>
+
+  <h2>Currently tracked</h2>
+  <p>{{ tool_pages | length }} tools:</p>
+  <ul class="tracked">
+    {% for page in tool_pages %}
+    <li>
+      <a href="{{ root }}{{ page.path }}">{{ page.tool.name }}</a>
+      <span class="muted">— {{ page.state.observations }} recorded
+      {{ 'observation' if page.state.observations == 1 else 'observations' }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+</article>
+{% endblock %}
