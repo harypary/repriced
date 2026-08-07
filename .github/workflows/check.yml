@@ -77,10 +77,14 @@ jobs:
         if: steps.check.outputs.ok == '0'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # 日付を入れない。同じ問題を1つのIssueで追い続けるための目印にする
+          TITLE: "抽出点検: 対応が必要なツールがあります"
         run: |
           set -euo pipefail
           {
-            echo "月次点検で、価格を取得できないツールが見つかりました。"
+            echo "**$(date -u +%Y-%m-%d) の点検結果**"
+            echo ""
+            echo "価格を取得できない、または前回より悪化したツールが見つかりました。"
             echo ""
             echo '```'
             cat check-report.txt
@@ -105,8 +109,16 @@ jobs:
             echo "_[実行ログ](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})_"
           } > issue-body.md
 
-          gh issue create \
-            --repo "${{ github.repository }}" \
-            --title "抽出点検: 対応が必要なツールがあります ($(date -u +%Y-%m))" \
-            --label "maintenance" \
-            --body-file issue-body.md
+          # 同じ問題で毎月Issueを立てない。開いているものがあれば追記するだけ。
+          # 未対応のまま12件並ぶと、どれが新しい問題なのか分からなくなる。
+          existing=$(gh issue list --repo "${{ github.repository }}" \
+            --state open --label maintenance --search "in:title $TITLE" \
+            --json number --jq '.[0].number // empty')
+
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --repo "${{ github.repository }}" --body-file issue-body.md
+            echo "既存の Issue #$existing に追記しました"
+          else
+            gh issue create --repo "${{ github.repository }}" \
+              --title "$TITLE" --label maintenance --body-file issue-body.md
+          fi

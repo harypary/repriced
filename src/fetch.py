@@ -70,8 +70,16 @@ class Fetcher:
     def _robots_for(self, url: str) -> RobotFileParser | None:
         """ホストの robots.txt を取得して解析する(ホストごとに1回だけ)。
 
-        取得できなかった場合は None を返し、呼び出し側は「許可」として扱う。
-        robots.txt が無い = 制限なし、が RFC 9309 の解釈。
+        RFC 9309 の区分に厳密に従う。ここは直感と逆なので注意すること。
+
+          200        … 内容に従う
+          4xx        … 「Unavailable」(§2.3.1.3)。robots.txt が存在しない場合と
+                        同じ扱いで、制限なし。401/403 も含む。
+                        禁止だと解釈しがちだが、RFC も Google の実装も「制限なし」
+          5xx / 通信不能 … 「Unreachable」(§2.3.1.4)。判断材料が無いので全面禁止。
+                        その日は取得を諦め、last-known-good を使う
+
+        None を返した場合は制限なしの意味。
         """
         parts = urlsplit(url)
         host = parts.netloc
@@ -86,13 +94,22 @@ class Fetcher:
             if res.status_code == 200:
                 parser = RobotFileParser()
                 parser.parse(res.text.splitlines())
-            elif res.status_code in (401, 403):
-                # RFC 9309: アクセス不能な robots.txt は「全面禁止」として扱う
+            elif res.status_code >= 500:
                 parser = RobotFileParser()
                 parser.parse(["User-agent: *", "Disallow: /"])
-                log.warning("%s: robots.txt が %d のため全面禁止として扱います", host, res.status_code)
+                log.warning(
+                    "%s: robots.txt が %d。到達不能とみなし今回は取得しません",
+                    host,
+                    res.status_code,
+                )
+            else:
+                # 4xx。robots.txt が無いのと同じで制限なし
+                log.info("%s: robots.txt が %d のため制限なしとして扱います", host, res.status_code)
         except requests.RequestException as e:
-            log.warning("%s: robots.txt を取得できませんでした (%s)。制限なしとして続行します", host, e)
+            # 到達不能。判断材料が無い状態で叩きに行かない
+            parser = RobotFileParser()
+            parser.parse(["User-agent: *", "Disallow: /"])
+            log.warning("%s: robots.txt に到達できません (%s)。今回は取得しません", host, e)
 
         self._robots[host] = parser
         return parser
