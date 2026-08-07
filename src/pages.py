@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -136,6 +137,9 @@ def headline_for(change: Change, tool: Tool) -> str:
         )
     if change.kind == KIND_ADDED:
         if change.after == 0:
+            # プラン名が "Free" のときに "a free Free tier" にならないようにする
+            if re.search(r"\bfree\b", change.plan, re.IGNORECASE):
+                return f"{name} added a free tier"
             return f"{name} added a free {change.plan} tier"
         return f"{name} added {change.plan} at {change.after_display}{unit}"
     if change.kind == KIND_REMOVED:
