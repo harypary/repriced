@@ -78,6 +78,9 @@ _ANNUAL_RE = re.compile(r"/\s?yr\b|/\s?year\b|per\s+year|a year", re.IGNORECASE)
 # 「Save $240/year」の /year は割引額の単位であって価格の単位ではない。
 # 判定前にこの手の文言を窓から取り除く。
 _SAVINGS_PHRASE_RE = re.compile(r"sav(?:e|ings?)\b[^|\n]{0,32}", re.IGNORECASE)
+# _walk_json が出力する「price: $20」のような、価格だと宣言済みの行の頭。
+# これが直前にあるなら、周期の表記が無くても価格として信用してよい。
+_PRICE_LABEL_RE = re.compile(r"\b\w*(?:price|amount|cost)\w*\s*:\s*$", re.IGNORECASE)
 
 # プラン名から金額を探す窓幅(文字)。
 #   TIGHT … 「プラン名のすぐ隣に書いてある」と言える距離。これだけを採用する
@@ -163,7 +166,8 @@ def _walk_json(obj: object, out: list[str], depth: int = 0) -> None:
             # (schema.org の例がそうなっている)。型で弾くと丸ごと取り逃がす。
             if isinstance(v, str) and _NUMERIC_RE.fullmatch(v.strip()):
                 v = float(v.strip())
-            if isinstance(v, (int, float)) and not isinstance(v, bool) and _PRICE_KEY_RE.search(key):
+            is_number = isinstance(v, (int, float)) and not isinstance(v, bool)
+            if is_number and _PRICE_KEY_RE.search(key):
                 # セント単位で持つ実装が多い。1000以上かつ整数なら100で割る
                 amount = float(v)
                 if amount >= 1000 and amount == int(amount) and amount % 100 == 0:
@@ -264,18 +268,23 @@ def _period_near(corpus: str, at: int) -> str:
 
 
 def _price_after(corpus: str, start: int, end: int) -> re.Match[str] | None:
-    """[start, end) の範囲で、割引額ではない最初の金額を返す。"""
+    """[start, end) の範囲で、割引額ではない最初の金額を返す。
+
+    「Save」が効くのは直後の1つの金額だけ、と考える。
+    文字数で遡ると、区切り文字の入り方次第で次の本物の価格まで巻き込む。
+    実際「Save $240 → $99/mo」の $99 を落とした。
+    そこで「直前の金額から今の金額までの間」だけを見る。
+    """
     pos = start
+    previous_end = start
     while pos < end:
         match = PRICE_RE.search(corpus, pos, end)
         if match is None:
             return None
-        # 金額の直前の文脈を見て「節約額/割引額」なら飛ばす。
-        # 遡る幅は狭くすること。広いと「Save $71/year $43 per month」の
-        # $43 まで割引額と見なして捨ててしまい、本当の価格を取り逃がす。
-        context = corpus[max(start, match.start() - 15) : match.start()]
-        if not _SAVINGS_RE.search(context):
+        between = corpus[previous_end : match.start()]
+        if not _SAVINGS_RE.search(between):
             return match
+        previous_end = match.end()
         pos = match.end()
     return None
 
@@ -322,7 +331,14 @@ def _accept(
         return None
 
     period = _period_near(corpus, match.end())
-    if amount != 0 and (distance > limit or not period):
+
+    # 構造化データの price キー直下の値は、周期の表記が無くても採用する。
+    # ベンダー自身が「これは価格だ」と機械向けに宣言しているので、
+    # 本文の近くに /mo と書いてあるかどうかを条件にする理由がない。
+    # ここを要求していたせいで JSON-LD だけのページを取り逃していた。
+    declared = _PRICE_LABEL_RE.search(corpus[max(0, match.start() - 24) : match.start()])
+
+    if amount != 0 and not declared and (distance > limit or not period):
         return None
 
     return PlanPrice(
@@ -384,7 +400,8 @@ def _find_plans(corpus: str, plans: tuple[str, ...], limit: int = TIGHT) -> dict
             # プラン名の直後に Free と書いてあるだけの無料プラン("Hobby | Free")。
             # 距離を厳しく切るのが要点で、広く取ると "start for free" を拾う
             adjacent_free = re.match(r"[\s|:·・-]{0,6}free\b", tail) is not None
-            if "$0" in tail or "0 usd" in tail or adjacent_free or re.search(r"\bfree\b", plan, re.I):
+            named_free = _FREE_PLAN_RE.search(plan) is not None
+            if "$0" in tail or "0 usd" in tail or adjacent_free or named_free:
                 candidate = PlanPrice(plan, 0.0, "Free", "", "high")
             else:
                 continue

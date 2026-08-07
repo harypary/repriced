@@ -1,0 +1,31 @@
+# lint の設定。CI と手元で同じ結果になるよう、規則をここに固定する。
+# コマンドラインのフラグで指定すると、ワークフローと手元で食い違う。
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "F",    # 未使用の import / 変数など、まず間違いなくバグ
+    "E",    # pycodestyle
+    "W",
+    "I",    # import の並び
+    "UP",   # 古い書き方
+    "B",    # よくある落とし穴
+    "SIM",  # 冗長な分岐
+    "RUF",
+]
+ignore = [
+    # コメントと文言が日本語なので、全角の括弧や記号は正常。
+    # これを有効にすると本文がほぼ全部警告になる。
+    "RUF001", "RUF002", "RUF003",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# テストは「事故の再現」が読めることが最優先なので、
+# 1行が長くても分割しない。HTMLの断片は途中で折ると意味が取れなくなる。
+"tests/*" = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

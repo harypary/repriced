@@ -130,7 +130,9 @@ def load_catalog(tools_path: Path, site_cfg: dict) -> Catalog:
             try:
                 compiled = re.compile(pattern)
             except re.error as e:
-                raise ConfigError(f"{where} ({slug}) patterns.{plan}: 正規表現が不正です — {e}")
+                raise ConfigError(
+                    f"{where} ({slug}) patterns.{plan}: 正規表現が不正です — {e}"
+                ) from e
             if compiled.groups != 1:
                 raise ConfigError(
                     f"{where} ({slug}) patterns.{plan}: 金額を捉えるグループを1つだけ書いてください"

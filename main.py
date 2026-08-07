@@ -14,7 +14,7 @@ import json
 import logging
 import os
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import yaml
@@ -72,7 +72,7 @@ def main() -> int:
     )
     load_dotenv()
     args = parse_args()
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     cfg = yaml.safe_load(args.config.read_text(encoding="utf-8"))
     try:
@@ -206,7 +206,10 @@ def main() -> int:
     )
 
     monetized = len(catalog.monetized)
-    print(f"\n✅ {len(tool_pages)}ツール / {len(compare_pages)}比較ページを {args.out} に生成しました")
+    print(
+        f"\n✅ {len(tool_pages)}ツール / {len(compare_pages)}比較ページを"
+        f" {args.out} に生成しました"
+    )
     print(f"   ローカル確認: python -m http.server -d {args.out} 8000")
     if not monetized and not args.demo:
         # 動いているのに1円も入らない状態。気づかないまま数ヶ月経つのが最悪なので毎回言う

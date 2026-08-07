@@ -187,7 +187,11 @@ def compare_checks(previous: dict[str, dict], current: dict[str, dict]) -> list[
         was = previous.get(slug)
         if not was:
             continue  # 新しく追加したツールは劣化ではない
-        if STATUS_RANK[now["status"]] < STATUS_RANK[was["status"]]:
+        # 未知の状態文字列で点検全体を落とさない。古い check.json には
+        # FETCH が無かったように、状態の種類は後から増える。
+        rank_now = STATUS_RANK.get(now["status"], 0)
+        rank_was = STATUS_RANK.get(was["status"], 0)
+        if rank_now < rank_was:
             degraded.append(
                 f"{slug}: {was['status']} → {now['status']}"
                 f" ({now['resolved']}/{now['expected']}プラン) — {now['detail']}"

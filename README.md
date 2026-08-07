@@ -112,7 +112,30 @@ python main.py
 
 # 生成物を検査（CIがデプロイ前に必ず実行する）
 python main.py --verify
+
+# 回帰テスト（CIが巡回前に必ず実行する）
+pip install -r requirements-dev.txt
+python -m pytest -q
+python -m ruff check src/ main.py tests/
 ```
+
+### テストは「過去に公開してしまった嘘」の一覧です
+
+[tests/](tests/) の37件は思いつきで書いたものではなく、**実際に誤った価格を
+公開してしまった事故から1件ずつ起こしたもの**です。
+
+| テスト | 実際に起きたこと |
+|---|---|
+| `test_billed_annually_is_not_a_yearly_unit` | `$79/月・年払い` を年額として掲載（12倍のずれ） |
+| `test_price_right_after_a_savings_figure_is_still_found` | 割引額の直後にある本当の価格を取り逃がし、beehiiv の2プランが空欄に |
+| `test_free_named_plan_never_gets_a_paid_price` | 無料プランに隣のカードの `$10` が入った |
+| `test_free_plan_absent_from_page_is_not_invented` | 無料プランが無い製品に「Free — $0」を捏造 |
+| `test_plan_name_matches_on_word_boundary` | `Pro` が `products` にヒットして無関係な数字を掲載 |
+| `test_new_plan_does_not_claim_the_vendor_added_it` | 抽出が改善しただけなのに「ベンダーがプランを追加した」と公開 |
+
+**落ちたときにテストの方を緩めないこと。** 同じ嘘をもう一度公開することになります。
+CI は巡回より前にこれを実行し、失敗したらその日は更新しません。
+間違った価格を配るくらいなら、更新しない方がましだからです。
 
 ### ⚠️ 価格履歴を書けるのは CI だけです
 

@@ -1,0 +1,15 @@
+# 開発・CI用。本番の巡回には不要なので requirements.txt とは分けてある。
+# 分けているのは、毎日アフィリエイト設定を持って走るジョブに、
+# テスト用の依存まで持ち込まないため。
+#
+# バージョンを固定する理由は requirements.txt と同じ。
+
+pytest==9.1.1
+ruff==0.16.1
+
+# --- pytest の推移的依存 ---
+colorama==0.4.6
+iniconfig==2.3.0
+packaging==26.0
+pluggy==1.6.0
+pygments==2.20.0

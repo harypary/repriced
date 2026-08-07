@@ -7,7 +7,6 @@
 
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -103,6 +102,7 @@ class FeedItem:
 
     @property
     def badge(self) -> str:
+        # 種別が増えたときに全ページの生成を落とさない
         return {
             KIND_INCREASE: "Price up",
             KIND_DECREASE: "Price down",
@@ -110,7 +110,7 @@ class FeedItem:
             KIND_REMOVED: "Delisted",
             KIND_PAGE: "Page changed",
             KIND_FIRST: "Tracking started",
-        }[self.change.kind]
+        }.get(self.change.kind, "Updated")
 
 
 def _period(change: Change) -> str:
@@ -159,7 +159,11 @@ def build_tool_pages(
     catalog: Catalog, states: dict[str, ToolState]
 ) -> list[ToolPage]:
     return [
-        ToolPage(tool=tool, state=states[tool.slug], category_name=catalog.categories[tool.category])
+        ToolPage(
+            tool=tool,
+            state=states[tool.slug],
+            category_name=catalog.categories[tool.category],
+        )
         for tool in catalog.tools
         if tool.slug in states
     ]
@@ -189,7 +193,9 @@ def build_feed(pages: list[ToolPage], limit: int) -> list[FeedItem]:
     return (real if len(real) >= limit else items)[:limit]
 
 
-def grouped_by_category(catalog: Catalog, pages: list[ToolPage]) -> list[tuple[str, list[ToolPage]]]:
+def grouped_by_category(
+    catalog: Catalog, pages: list[ToolPage]
+) -> list[tuple[str, list[ToolPage]]]:
     """カテゴリ順は tools.yaml の categories の並びに従う。"""
     grouped: list[tuple[str, list[ToolPage]]] = []
     for key, label in catalog.categories.items():

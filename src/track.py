@@ -21,14 +21,13 @@ from __future__ import annotations
 import json
 import logging
 from dataclasses import asdict, dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
+from itertools import pairwise
 from pathlib import Path
 
 from .extract import Extraction, PlanPrice
 
 log = logging.getLogger(__name__)
-
-UTC = timezone.utc
 
 # 表示に使う変更種別。テンプレート側の見出しと1対1で対応している。
 KIND_INCREASE = "increase"
@@ -260,7 +259,7 @@ def build_changes(snaps: list[Snapshot]) -> list[Change]:
     changes: list[Change] = [
         Change(ts=ok_snaps[0].ts, slug=ok_snaps[0].slug, kind=KIND_FIRST)
     ]
-    for previous, current in zip(ok_snaps, ok_snaps[1:]):
+    for previous, current in pairwise(ok_snaps):
         changes.extend(diff(previous, current))
     changes.sort(key=lambda c: c.ts, reverse=True)
     return changes

@@ -44,6 +44,15 @@ jobs:
       # 固定したバージョン以外を絶対に入れない
       - run: pip install --no-deps -r requirements.txt
 
+      # 抽出ロジックの回帰テスト。ここのケースは全部、実際に誤った価格を
+      # 公開してしまった事故から来ている。落ちたら巡回もデプロイもしない。
+      # 間違った価格を配るくらいなら、その日は更新しない方がよい。
+      - name: 回帰テスト
+        run: |
+          pip install --no-deps -r requirements-dev.txt
+          python -m pytest tests/ -q
+          python -m ruff check src/ main.py tests/ --line-length 100
+
       - name: 価格ページを巡回してサイトを生成
         env:
           SITE_BASE_URL: ${{ vars.SITE_BASE_URL }}
