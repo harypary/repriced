@@ -79,33 +79,27 @@
     "status": "PARTIAL"
   },
   "kit": {
-    "detail": "text",
+    "detail": "robots.txt により取得が禁止されています",
     "expected": 3,
-    "missing": [],
-    "resolved": 3,
-    "status": "OK"
+    "resolved": 0,
+    "status": "NG"
   },
   "monday": {
     "detail": "mixed",
     "expected": 5,
     "missing": [
-      "Basic",
-      "Standard",
-      "Pro",
       "Enterprise"
     ],
-    "resolved": 1,
+    "resolved": 4,
     "status": "PARTIAL"
   },
   "notion": {
     "detail": "embedded-json",
     "expected": 4,
     "missing": [
-      "Plus",
-      "Business",
       "Enterprise"
     ],
-    "resolved": 1,
+    "resolved": 3,
     "status": "PARTIAL"
   },
   "surfer-seo": {
