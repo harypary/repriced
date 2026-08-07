@@ -109,7 +109,10 @@ def collect(
 
 
 # 状態の良し悪しの順序。前回より下がったかを判定するのに使う。
-STATUS_RANK = {"NG": 0, "PARTIAL": 1, "OK": 2}
+#   FETCH … ページを取得できなかった。相手のブロックや障害で、こちらの設定の問題ではない
+#   NG    … 取得はできたが価格を1つも取り出せない。patterns を書く必要がある
+# 直し方が違うので混ぜない。FETCH に patterns を書いても意味がない。
+STATUS_RANK = {"FETCH": 0, "NG": 0, "PARTIAL": 1, "OK": 2}
 
 
 def check(catalog: Catalog, fetcher: Fetcher) -> dict[str, dict]:
@@ -128,12 +131,13 @@ def check(catalog: Catalog, fetcher: Fetcher) -> dict[str, dict]:
     for tool in catalog.tools:
         result = fetcher.get(tool.pricing_url)
         if not result.ok:
-            print(f"{tool.slug:<16} {'NG':<8} {'-':<9} {result.error}")
+            print(f"{tool.slug:<16} {'FETCH':<8} {'-':<9} {result.error}")
             results[tool.slug] = {
-                "status": "NG",
+                "status": "FETCH",
                 "resolved": 0,
                 "expected": len(tool.plans),
                 "detail": result.error,
+                "missing": list(tool.plans),
             }
             continue
 
@@ -165,9 +169,10 @@ def check(catalog: Catalog, fetcher: Fetcher) -> dict[str, dict]:
             "missing": missing,
         }
 
-    broken = sum(1 for r in results.values() if r["status"] == "NG")
+    ng = sum(1 for r in results.values() if r["status"] == "NG")
+    unreachable = sum(1 for r in results.values() if r["status"] == "FETCH")
     print("-" * 56)
-    print(f"要対応: {broken} / {len(catalog.tools)} ツール")
+    print(f"要対応: NG {ng}件（patterns が必要） / FETCH {unreachable}件（相手側の遮断・障害）")
     return results
 
 

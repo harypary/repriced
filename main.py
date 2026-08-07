@@ -116,9 +116,16 @@ def main() -> int:
                 encoding="utf-8",
             )
 
-        broken = sum(1 for r in results.values() if r["status"] == "NG")
-        if broken or degraded:
-            print("\n❌ 対応が必要です。config/tools.yaml の patterns を確認してください。")
+        ng = [s for s, r in results.items() if r["status"] == "NG"]
+        unreachable = [s for s, r in results.items() if r["status"] == "FETCH"]
+        if ng:
+            print(f"\n❌ 価格を取り出せません: {', '.join(ng)}")
+            print("   config/tools.yaml の patterns を書くか、該当プランを外してください。")
+        if unreachable:
+            print(f"\n⚠️  ページを取得できません: {', '.join(unreachable)}")
+            print("   相手側の遮断や障害です。patterns では直りません。")
+            print("   継続するようなら追跡対象から外すことを検討してください。")
+        if ng or unreachable or degraded:
             return 1
         print("\n✅ 前回から悪化した項目はありません")
         return 0
