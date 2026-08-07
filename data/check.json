@@ -81,8 +81,13 @@
   "kit": {
     "detail": "HTTP 403",
     "expected": 3,
+    "missing": [
+      "Newsletter",
+      "Creator",
+      "Pro"
+    ],
     "resolved": 0,
-    "status": "NG"
+    "status": "FETCH"
   },
   "monday": {
     "detail": "mixed",
