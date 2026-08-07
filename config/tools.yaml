@@ -110,7 +110,9 @@ tools:
     category: productivity
     homepage: https://www.notion.com/
     pricing_url: https://www.notion.com/pricing
-    plans: [Free, Plus, Business, Enterprise]
+    # Enterprise は「要問い合わせ」で定価が無い。載せると「not detected」と
+    # 表示され、こちらの抽出が失敗したように見えてしまう
+    plans: [Free, Plus, Business]
     currency: USD
     affiliate: {program: direct, url: "", terms: ""}
 
@@ -131,7 +133,8 @@ tools:
     category: writing
     homepage: https://www.jasper.ai/
     pricing_url: https://www.jasper.ai/pricing
-    plans: [Pro, Business]
+    # Business は要問い合わせ(12ヶ月契約の個別見積)で定価が無い
+    plans: [Pro]
     currency: USD
     affiliate: {program: partnerstack, url: "", terms: ""}
 
