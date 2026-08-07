@@ -79,7 +79,7 @@
     "status": "PARTIAL"
   },
   "kit": {
-    "detail": "robots.txt により取得が禁止されています",
+    "detail": "HTTP 403",
     "expected": 3,
     "resolved": 0,
     "status": "NG"
