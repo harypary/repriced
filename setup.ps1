@@ -67,7 +67,7 @@ if ($SkipCrawl) {
     Warn "巡回をスキップしました"
     python main.py --render
 } else {
-    Write-Host "    22サイトを2秒間隔で読むので1分ほどかかります..." -ForegroundColor DarkGray
+    Write-Host "    追跡対象を2秒間隔で読むので1分ほどかかります..." -ForegroundColor DarkGray
     python main.py --base-url $siteUrl
 }
 if ($LASTEXITCODE -ne 0) { Fail "生成に失敗しました。上のログを確認してください。" }

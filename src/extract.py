@@ -131,6 +131,8 @@ _PRICE_KEY_RE = re.compile(
 )
 _PERIOD_KEY_RE = re.compile(r"month|annual|year", re.IGNORECASE)
 _NUMERIC_RE = re.compile(r"\d+(?:\.\d+)?")
+# 名前からして無料であるプラン。"Free" "Free Forever" など
+_FREE_PLAN_RE = re.compile(r"\bfree\b", re.IGNORECASE)
 
 
 def _walk_json(obj: object, out: list[str], depth: int = 0) -> None:
@@ -296,6 +298,11 @@ def _accept(
     可能性が高いので捨てる。
     """
     amount = _amount(match)
+    # "Free" という名前のプランに有料の額が入ることは定義上ありえない。
+    # 近傍探索が隣のカードに滑った証拠なので、値ごと捨てる。
+    # (monday.com の Free に $10 が入って公開されたのがこれ)
+    if amount != 0 and _FREE_PLAN_RE.search(plan):
+        return None
     # $0 は捨てないこと。無料プランを表す正当な値であり、ここで弾くと
     # 探索が次のプランの価格まで滑り、無料プランに有料の額が入る
     # (Cursor の Hobby に Pro の $20 が入ったのがこれ)。
@@ -327,7 +334,16 @@ def _find_plans(corpus: str, plans: tuple[str, ...], limit: int = TIGHT) -> dict
 
     best: dict[str, PlanPrice] = {plan: PlanPrice(plan, None) for plan in plans}
 
+    # 名前に Free が入っているプランは探索するまでもなく $0。
+    # 探索させると隣のカードの有料価格を拾うことがあり、
+    # 「無料プランが $10」という一目で分かる嘘を公開してしまう。
+    for plan in plans:
+        if _FREE_PLAN_RE.search(plan):
+            best[plan] = PlanPrice(plan, 0.0, "Free", "", "high")
+
     for i, (_, end, plan) in enumerate(marks):
+        if _FREE_PLAN_RE.search(plan):
+            continue  # 上で確定済み
         # 次に別のプラン名が出るところで窓を閉じる
         limit = len(corpus)
         for next_start, _, next_plan in marks[i + 1 :]:
