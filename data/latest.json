@@ -26,15 +26,6 @@
     "plans_expected": 3,
     "plans_resolved": 3
   },
-  "copy-ai": {
-    "checked_at": "2026-08-07T04:31:37.436583+00:00",
-    "http_status": 200,
-    "method": "text",
-    "note": "",
-    "ok": true,
-    "plans_expected": 4,
-    "plans_resolved": 1
-  },
   "cursor": {
     "checked_at": "2026-08-07T04:31:37.436583+00:00",
     "http_status": 200,
@@ -94,15 +85,6 @@
     "http_status": 403,
     "note": "HTTP 403",
     "ok": false
-  },
-  "monday": {
-    "checked_at": "2026-08-07T04:31:37.436583+00:00",
-    "http_status": 200,
-    "method": "mixed",
-    "note": "",
-    "ok": true,
-    "plans_expected": 5,
-    "plans_resolved": 4
   },
   "notion": {
     "checked_at": "2026-08-07T04:31:37.436583+00:00",

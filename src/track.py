@@ -239,10 +239,15 @@ def diff(previous: Snapshot, current: Snapshot) -> list[Change]:
             )
         )
 
-    if not changes:
+    if not changes and previous.signature != current.signature:
         # プラン単位の差は取れなかったが、ページ上の価格集合は確かに変わっている。
         # 「何が」まで言えないので、断定せず「変更を検出」とだけ記録する。
         changes.append(Change(ts=current.ts, slug=current.slug, kind=KIND_PAGE))
+
+    # シグネチャが同じなら金額は1円も動いていない。課金周期の表記だけが
+    # 変わった場合がこれに当たるが、それは抽出側を直したときにも起きる。
+    # ベンダーが何かしたとは限らないので、何も言わない。
+    # 記録は残す(データは直る)が、変更イベントとしては公開しない。
     return changes
 
 

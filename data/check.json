@@ -23,17 +23,6 @@
     "resolved": 3,
     "status": "OK"
   },
-  "copy-ai": {
-    "detail": "text",
-    "expected": 4,
-    "missing": [
-      "Starter",
-      "Advanced",
-      "Enterprise"
-    ],
-    "resolved": 1,
-    "status": "PARTIAL"
-  },
   "cursor": {
     "detail": "mixed",
     "expected": 5,
@@ -88,15 +77,6 @@
     ],
     "resolved": 0,
     "status": "FETCH"
-  },
-  "monday": {
-    "detail": "mixed",
-    "expected": 5,
-    "missing": [
-      "Enterprise"
-    ],
-    "resolved": 4,
-    "status": "PARTIAL"
   },
   "notion": {
     "detail": "embedded-json",

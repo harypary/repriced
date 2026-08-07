@@ -90,7 +90,7 @@ FAR = 400  # 探索そのものを打ち切る幅
 # 月額サブスクとして妥当な範囲(USD)。この外は掲載しない。
 # beehiiv で $0.3、ClickUp で $750 のような明らかな誤検出が出たため。
 MIN_PRICE = 3.0
-MAX_PRICE = 2000.0
+MAX_PRICE = 5000.0  # copy-ai の Scale が $3,000/月。この規模の実在プランを弾かない
 
 
 @dataclass(frozen=True)
@@ -270,8 +270,10 @@ def _price_after(corpus: str, start: int, end: int) -> re.Match[str] | None:
         match = PRICE_RE.search(corpus, pos, end)
         if match is None:
             return None
-        # 金額の直前の文脈を見て「節約額/割引額」なら飛ばす
-        context = corpus[max(start, match.start() - 40) : match.start()]
+        # 金額の直前の文脈を見て「節約額/割引額」なら飛ばす。
+        # 遡る幅は狭くすること。広いと「Save $71/year $43 per month」の
+        # $43 まで割引額と見なして捨ててしまい、本当の価格を取り逃がす。
+        context = corpus[max(start, match.start() - 15) : match.start()]
         if not _SAVINGS_RE.search(context):
             return match
         pos = match.end()
@@ -347,8 +349,13 @@ def _find_plans(corpus: str, plans: tuple[str, ...], limit: int = TIGHT) -> dict
     # 名前に Free が入っているプランは探索するまでもなく $0。
     # 探索させると隣のカードの有料価格を拾うことがあり、
     # 「無料プランが $10」という一目で分かる嘘を公開してしまう。
+    #
+    # ただし「ページに実在すること」が条件。設定に書いてあるだけで
+    # 料金表に無いプランまで $0 と断定すると、無料プランが存在しない製品に
+    # 「Free — $0」の行を捏造することになる(copy-ai で実際に起きた)。
+    present = {plan for _, _, plan in marks}
     for plan in plans:
-        if _FREE_PLAN_RE.search(plan):
+        if _FREE_PLAN_RE.search(plan) and plan in present:
             best[plan] = PlanPrice(plan, 0.0, "Free", "", "high")
 
     for i, (_, end, plan) in enumerate(marks):

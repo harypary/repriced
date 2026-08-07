@@ -57,6 +57,12 @@ tools:
   #                 持っており、実値はページに存在しない
   #   webflow     … サイトプランとワークスペースプランが同一ページに混在し、
   #                 プラン名だけではどちらの価格か判別できない
+  #   monday      … 1ページに4製品(Work Management / CRM / Service / Dev)があり、
+  #                 どれも Basic / Standard / Pro という同じプラン名を使う。
+  #                 名前だけではどの製品の価格か決められない。実測値も
+  #                 公表されている料金と一致せず、検証できなかった
+  #   copy-ai     … 4プラン中1つしか取れず、しかも年額総額($288/yr)なので
+  #                 他ツールの月額表示と並べて比較できない
 
   - slug: cursor
     name: Cursor
@@ -119,16 +125,6 @@ tools:
     currency: USD
     affiliate: {program: direct, url: "", terms: ""}
 
-  - slug: monday
-    name: monday.com
-    vendor: monday.com
-    category: productivity
-    homepage: https://monday.com/
-    pricing_url: https://monday.com/pricing
-    plans: [Free, Basic, Standard, Pro, Enterprise]
-    currency: USD
-    affiliate: {program: partnerstack, url: "", terms: ""}
-
   - slug: jasper
     name: Jasper
     vendor: Jasper AI
@@ -138,16 +134,6 @@ tools:
     plans: [Pro, Business]
     currency: USD
     affiliate: {program: partnerstack, url: "", terms: ""}
-
-  - slug: copy-ai
-    name: Copy.ai
-    vendor: Copy.ai
-    category: writing
-    homepage: https://www.copy.ai/
-    pricing_url: https://www.copy.ai/prices
-    plans: [Free, Starter, Advanced, Enterprise]
-    currency: USD
-    affiliate: {program: direct, url: "", terms: ""}
 
   - slug: writesonic
     name: Writesonic

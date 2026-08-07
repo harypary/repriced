@@ -32,12 +32,9 @@ generation:
 # 「実際に検索されている組み合わせ」だけを手で選ぶこと。
 # Search Console で表示回数が付いた組み合わせを後から足していくのが正しい増やし方。
 comparisons:
+  - [claude, cursor]
   - [cursor, github-copilot]
   - [notion, clickup]
-  - [notion, monday]
-  - [clickup, monday]
-  - [jasper, copy-ai]
   - [jasper, writesonic]
-  - [copy-ai, writesonic]
   - [descript, elevenlabs]
   - [beehiiv, kit]
