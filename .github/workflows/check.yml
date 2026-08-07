@@ -60,7 +60,16 @@ jobs:
             exit 0
           fi
           git commit -m "chore(check): 抽出状況を記録 $(date -u +%Y-%m)"
-          git push || echo "::warning::push できませんでした。次回再試行されます"
+          # 日次の巡回ワークフローが同時に価格履歴をコミットしていることがある。
+          # どちらも追記だけなので rebase で解決できる。
+          for attempt in 1 2 3; do
+            if git push; then exit 0; fi
+            echo "push に失敗しました。取り込んで再試行します ($attempt/3)"
+            git pull --rebase --autostash
+          done
+          # 比較基準が1回古いままでも、次回の点検で最新に置き換わるだけなので
+          # ジョブは落とさない。
+          echo "::warning::比較基準を push できませんでした。次回実行で再記録されます"
 
       # 問題が無い月は何も通知しない。毎月Issueが立つと読まれなくなり、
       # 本当に壊れた月に気づけなくなる。
