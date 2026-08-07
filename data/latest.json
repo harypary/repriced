@@ -1,6 +1,6 @@
 {
   "beehiiv": {
-    "checked_at": "2026-08-07T03:21:54.620040+00:00",
+    "checked_at": "2026-08-07T03:25:00.694255+00:00",
     "http_status": 200,
     "method": "mixed",
     "note": "",
@@ -9,7 +9,7 @@
     "plans_resolved": 1
   },
   "claude": {
-    "checked_at": "2026-08-07T03:21:54.620040+00:00",
+    "checked_at": "2026-08-07T03:25:00.694255+00:00",
     "http_status": 200,
     "method": "mixed",
     "note": "",
@@ -18,7 +18,7 @@
     "plans_resolved": 4
   },
   "clickup": {
-    "checked_at": "2026-08-07T03:21:54.620040+00:00",
+    "checked_at": "2026-08-07T03:25:00.694255+00:00",
     "http_status": 200,
     "method": "mixed",
     "note": "",
@@ -27,7 +27,7 @@
     "plans_resolved": 3
   },
   "copy-ai": {
-    "checked_at": "2026-08-07T03:21:54.620040+00:00",
+    "checked_at": "2026-08-07T03:25:00.694255+00:00",
     "http_status": 200,
     "method": "text",
     "note": "",
@@ -36,7 +36,7 @@
     "plans_resolved": 1
   },
   "cursor": {
-    "checked_at": "2026-08-07T03:21:54.620040+00:00",
+    "checked_at": "2026-08-07T03:25:00.694255+00:00",
     "http_status": 200,
     "method": "mixed",
     "note": "",
@@ -45,7 +45,7 @@
     "plans_resolved": 5
   },
   "descript": {
-    "checked_at": "2026-08-07T03:21:54.620040+00:00",
+    "checked_at": "2026-08-07T03:25:00.694255+00:00",
     "http_status": 200,
     "method": "jsonld",
     "note": "",
@@ -54,7 +54,7 @@
     "plans_resolved": 4
   },
   "elevenlabs": {
-    "checked_at": "2026-08-07T03:21:54.620040+00:00",
+    "checked_at": "2026-08-07T03:25:00.694255+00:00",
     "http_status": 200,
     "method": "mixed",
     "note": "",
@@ -63,7 +63,7 @@
     "plans_resolved": 5
   },
   "framer": {
-    "checked_at": "2026-08-07T03:21:54.620040+00:00",
+    "checked_at": "2026-08-07T03:25:00.694255+00:00",
     "http_status": 200,
     "method": "jsonld",
     "note": "",
@@ -72,7 +72,7 @@
     "plans_resolved": 3
   },
   "github-copilot": {
-    "checked_at": "2026-08-07T03:21:54.620040+00:00",
+    "checked_at": "2026-08-07T03:25:00.694255+00:00",
     "http_status": 200,
     "method": "mixed",
     "note": "",
@@ -81,7 +81,7 @@
     "plans_resolved": 3
   },
   "jasper": {
-    "checked_at": "2026-08-07T03:21:54.620040+00:00",
+    "checked_at": "2026-08-07T03:25:00.694255+00:00",
     "http_status": 200,
     "method": "mixed",
     "note": "",
@@ -90,13 +90,13 @@
     "plans_resolved": 1
   },
   "kit": {
-    "checked_at": "2026-08-07T03:21:54.620040+00:00",
+    "checked_at": "2026-08-07T03:25:00.694255+00:00",
     "http_status": null,
     "note": "robots.txt により取得が禁止されています",
     "ok": false
   },
   "monday": {
-    "checked_at": "2026-08-07T03:21:54.620040+00:00",
+    "checked_at": "2026-08-07T03:25:00.694255+00:00",
     "http_status": 200,
     "method": "mixed",
     "note": "",
@@ -105,7 +105,7 @@
     "plans_resolved": 4
   },
   "notion": {
-    "checked_at": "2026-08-07T03:21:54.620040+00:00",
+    "checked_at": "2026-08-07T03:25:00.694255+00:00",
     "http_status": 200,
     "method": "embedded-json",
     "note": "",
@@ -114,7 +114,7 @@
     "plans_resolved": 3
   },
   "surfer-seo": {
-    "checked_at": "2026-08-07T03:21:54.620040+00:00",
+    "checked_at": "2026-08-07T03:25:00.694255+00:00",
     "http_status": 200,
     "method": "text",
     "note": "",
@@ -123,7 +123,7 @@
     "plans_resolved": 3
   },
   "writesonic": {
-    "checked_at": "2026-08-07T03:21:54.620040+00:00",
+    "checked_at": "2026-08-07T03:25:00.694255+00:00",
     "http_status": 200,
     "method": "mixed",
     "note": "",
