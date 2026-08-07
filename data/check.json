@@ -2,12 +2,9 @@
   "beehiiv": {
     "detail": "mixed",
     "expected": 3,
-    "missing": [
-      "Scale",
-      "Max"
-    ],
-    "resolved": 1,
-    "status": "PARTIAL"
+    "missing": [],
+    "resolved": 3,
+    "status": "OK"
   },
   "claude": {
     "detail": "mixed",
