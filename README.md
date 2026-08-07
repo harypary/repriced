@@ -107,12 +107,31 @@ pip install -r requirements.txt
 python main.py --demo
 python -m http.server -d docs 8000     # → http://localhost:8000
 
-# 本番: 実際に巡回して生成
+# 実際に巡回して生成（履歴には書き込まない）
 python main.py
 
 # 生成物を検査（CIがデプロイ前に必ず実行する）
 python main.py --verify
 ```
+
+### ⚠️ 価格履歴を書けるのは CI だけです
+
+手元で `python main.py` を実行しても **`data/prices.jsonl` には書き込まれません**。
+書き込むのは `--record` を付けたときだけで、それを付けるのは
+[daily.yml](.github/workflows/daily.yml) の1箇所に限定してあります。
+
+**理由**: 多くのSaaSはアクセス元の国で言語と通貨を変えます。日本から Notion の
+料金ページを読むと `Free` しか取れませんが、CI（米国）からは `Plus $10 / Business $20` が
+正しく取れます。この2つを同じ履歴に混ぜると、
+
+```
+Notion added Plus at $10/mo        ← 嘘。日本からは読めなかっただけ
+monday.com removed the Free plan   ← 嘘。同上
+```
+
+という**実際には起きていない変更**が公開されます。公開初日に実際これが6件出ました。
+履歴は必ず**同じ観測地点**から取られなければならないので、手元の実行は
+「巡回して生成物を確認する」までに留めてあります。
 
 ### `--verify` が守っているもの
 

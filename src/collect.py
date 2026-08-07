@@ -24,8 +24,20 @@ def collect(
     fetcher: Fetcher,
     history_path: Path,
     now: datetime,
+    record: bool = False,
 ) -> tuple[dict[str, dict], int, int]:
     """全ツールを巡回する。
+
+    record=False のときは履歴に書き込まない。既定を False にしてあるのは、
+    履歴は必ず「同じ観測地点」から取られなければならないため。
+    多くのSaaSはアクセス元の国で言語と通貨を変えるので、日本から見た結果と
+    CI(米国)から見た結果が混ざると、実際には起きていない値上げや
+    プラン追加が履歴に残る。実際 Notion を日本から見ると Free しか
+    読めず、CIの結果と混ざって「Notion が Plus を追加した」という
+    嘘の変更イベントが生成された。
+
+    したがって履歴を書けるのは GitHub Actions だけ(--record)で、
+    手元の実行は巡回と生成の確認までに留める。
 
     戻り値: (latest.json に書く辞書, 記録した変更数, 取得に失敗した数)
     """
@@ -56,8 +68,9 @@ def collect(
             failed += 1
             log.warning("%s: 価格を抽出できませんでした (%s)", tool.slug, extraction.note)
         elif should_record(previous, snapshot):
-            append_snapshot(history_path, snapshot)
-            history.setdefault(tool.slug, []).append(snapshot)
+            if record:
+                append_snapshot(history_path, snapshot)
+                history.setdefault(tool.slug, []).append(snapshot)
             recorded += 1
             if previous is None:
                 log.info("%s: 初回記録 (%d プラン取得)", tool.slug, len(snapshot.plans))

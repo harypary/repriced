@@ -75,12 +75,10 @@ if ($LASTEXITCODE -ne 0) { Fail "生成に失敗しました。上のログを�
 python main.py --verify --base-url $siteUrl
 if ($LASTEXITCODE -ne 0) { Fail "生成物の検証に失敗しました。上の NG を解消してから再実行してください。" }
 
-if (Test-Path "data/prices.jsonl") {
-    $observations = (Get-Content "data/prices.jsonl" | Measure-Object -Line).Lines
-    Ok "$observations 件を記録しました（data/prices.jsonl）"
-} else {
-    Warn "価格を1件も記録できませんでした。'python main.py --check' で原因を確認してください"
-}
+# ここでは履歴に書き込まない(--record を付けない)。
+# 価格履歴は必ずCI(米国)から取る。手元の観測を混ぜると地域差が
+# 値上げとして記録されてしまうため、初回の記録もCIに任せる。
+Ok "巡回と生成の確認までを実行しました（履歴の記録はCIが行います）"
 
 # ---- 4. push ------------------------------------------------
 Step 4 "GitHubへpush"

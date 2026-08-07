@@ -49,7 +49,10 @@ jobs:
           SITE_BASE_URL: ${{ vars.SITE_BASE_URL }}
           # 公開ページのmetaタグに出る値なので Secret ではなく Variable でよい
           GOOGLE_SITE_VERIFICATION: ${{ vars.GOOGLE_SITE_VERIFICATION }}
-        run: python main.py
+        # --record を付けられるのはここだけ。価格履歴は必ず同じ観測地点から
+        # 取られなければならず、手元(日本)とCI(米国)が混ざると
+        # 地域別の言語・通貨の違いが「値上げ」「プラン追加」として記録される。
+        run: python main.py --record
 
       # 開示バーの消失・リンク切れ・DEMOデータの混入を検出する。
       # ここで落とせば壊れた状態がPagesに出ることはない。

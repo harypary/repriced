@@ -43,6 +43,11 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--check", action="store_true", help="価格抽出の健全性を点検して終了")
     p.add_argument("--render", action="store_true", help="巡回せず既存履歴から再生成")
     p.add_argument("--verify", action="store_true", help="生成済みの docs/ を検査して終了")
+    p.add_argument(
+        "--record",
+        action="store_true",
+        help="価格履歴に書き込む。CI(米国)専用。手元から使うと観測地点が混ざる",
+    )
     return p.parse_args()
 
 
@@ -108,7 +113,7 @@ def main() -> int:
             )
             return 1
     else:
-        latest, recorded, failed = collect(catalog, fetcher(), HISTORY, now)
+        latest, recorded, failed = collect(catalog, fetcher(), HISTORY, now, record=args.record)
         save_latest(LATEST, latest)
         history = load_history(HISTORY)
 
@@ -117,7 +122,15 @@ def main() -> int:
             # 「全ツールが同時に確認不能」という異常な見た目のサイトが公開される。
             logging.error("全%d件の取得に失敗しました。今回の生成は中止します。", failed)
             return 1
-        logging.info("巡回完了: 変更%d件を記録 / 失敗%d件", recorded, failed)
+        if args.record:
+            logging.info("巡回完了: 変更%d件を記録 / 失敗%d件", recorded, failed)
+        else:
+            logging.info(
+                "巡回完了: 変更%d件を検出(未記録) / 失敗%d件"
+                " — 履歴を書けるのはCIだけです(--record)",
+                recorded,
+                failed,
+            )
 
     # ---- 履歴 → ページ ----
     states = {
