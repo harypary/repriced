@@ -187,6 +187,13 @@ def should_record(previous: Snapshot | None, current: Snapshot) -> bool:
         return True
     if previous.signature != current.signature:
         return True
+    # 金額が同じでも課金周期の表記が変わったら記録する。
+    # $33/月 と $33/年 は読者にとって全く違う情報で、シグネチャは
+    # 金額だけから作るのでこれを見ないと永久に古い表記が残る。
+    for plan, now in current.plans.items():
+        was = previous.plans.get(plan)
+        if was and was.get("period") != now.get("period"):
+            return True
     # シグネチャが同じでも、抽出できたプランが増えた場合は記録する
     # (前回は取りこぼしていた、というだけなので値上げ扱いにはならない)
     return set(current.plans) - set(previous.plans) != set()

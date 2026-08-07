@@ -67,17 +67,25 @@ _WS_RE = re.compile(r"[ \t\r\f\v]+")
 _BLANK_RE = re.compile(r"\n{2,}")
 
 # 月額/年額の判定。プラン名からこの距離以内に出た表記を採用する。
-_MONTHLY_RE = re.compile(r"/\s?mo\b|/\s?month|per month|monthly|a month", re.IGNORECASE)
-_ANNUAL_RE = re.compile(r"/\s?yr\b|/\s?year|per year|annually|billed annually|a year", re.IGNORECASE)
+# 課金周期の判定。ここは「その金額の単位は何か」だけを見る。
+#
+# 重要: "billed annually" / "billed yearly" は支払いをまとめる約束であって
+# 単価の単位ではない。"$79 per month, billed annually" の $79 は月額。
+# これを年額と解釈すると12倍ずれた価格を掲載することになる(実際に起きた)。
+# したがって annually 系は年額の目印に含めない。
+_MONTHLY_RE = re.compile(r"/\s?mo\b|/\s?month|per\s+month|a month|monthly", re.IGNORECASE)
+_ANNUAL_RE = re.compile(r"/\s?yr\b|/\s?year\b|per\s+year|a year", re.IGNORECASE)
+# 「Save $240/year」の /year は割引額の単位であって価格の単位ではない。
+# 判定前にこの手の文言を窓から取り除く。
+_SAVINGS_PHRASE_RE = re.compile(r"sav(?:e|ings?)\b[^|\n]{0,32}", re.IGNORECASE)
 
 # プラン名から金額を探す窓幅(文字)。
 #   TIGHT … 「プラン名のすぐ隣に書いてある」と言える距離。これだけを採用する
 #   FAR   … ここまでは探すが、採用は課金周期の表記を伴う場合に限る
 # 実データで検証した結果、この2段構えでないと隣のカードの価格や
 # 機能説明中の数字を掴む。緩めるほど掲載数は増えるが、増える分は嘘になる。
-STRICT = 25  # 本文から拾うときの上限。「Pro $20/mo」だけを通す幅
-TIGHT = 60  # 構造化データ内の上限。キーと値の間に多少の余白があるため広い
-FAR = 400
+TIGHT = 60  # プラン名から金額までの上限。これを超えたら課金周期の表記が必要
+FAR = 400  # 探索そのものを打ち切る幅
 
 # 月額サブスクとして妥当な範囲(USD)。この外は掲載しない。
 # beehiiv で $0.3、ClickUp で $750 のような明らかな誤検出が出たため。
@@ -245,11 +253,13 @@ def _visible_text(html: str) -> str:
 
 
 def _period_near(corpus: str, at: int) -> str:
-    window = corpus[at : at + 60]
-    if _ANNUAL_RE.search(window):
-        return "year"
+    window = _SAVINGS_PHRASE_RE.sub(" ", corpus[at : at + 60])
+    # 月額の表記があればそれが単位。年払いの案内が併記されていても月額のまま。
+    # 順序が逆だと "$33/mo ... billed yearly" を年額と読んでしまう。
     if _MONTHLY_RE.search(window):
         return "month"
+    if _ANNUAL_RE.search(window):
+        return "year"
     return ""
 
 

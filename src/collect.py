@@ -14,7 +14,7 @@ from pathlib import Path
 from .catalog import Catalog
 from .extract import extract
 from .fetch import Fetcher
-from .track import Snapshot, append_snapshot, last_ok, load_history, should_record, to_snapshot
+from .track import append_snapshot, last_ok, load_history, should_record, to_snapshot
 
 log = logging.getLogger(__name__)
 
@@ -198,11 +198,6 @@ def compare_checks(previous: dict[str, dict], current: dict[str, dict]) -> list[
                 f" — 未検出: {', '.join(now.get('missing') or []) or '不明'}"
             )
 
-    for slug in previous:
-        if slug not in current:
-            continue  # 設定から外したツール。意図的なので通知しない
+    # 設定から外したツールは意図的なので通知しない
     return degraded
 
-
-def snapshot_count(history: dict[str, list[Snapshot]]) -> int:
-    return sum(len(v) for v in history.values())
