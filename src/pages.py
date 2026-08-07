@@ -106,8 +106,8 @@ class FeedItem:
         return {
             KIND_INCREASE: "Price up",
             KIND_DECREASE: "Price down",
-            KIND_ADDED: "New plan",
-            KIND_REMOVED: "Plan removed",
+            KIND_ADDED: "Now tracked",
+            KIND_REMOVED: "Delisted",
             KIND_PAGE: "Page changed",
             KIND_FIRST: "Tracking started",
         }[self.change.kind]
@@ -135,15 +135,19 @@ def headline_for(change: Change, tool: Tool) -> str:
             f"{name} cut {change.plan} from {change.before_display} "
             f"to {change.after_display}{unit}{tail}"
         )
+    # 「ベンダーがプランを追加した」とは書かないこと。
+    # プランが履歴に現れる理由は2つあり、区別できない:
+    #   (a) ベンダーが本当に新設した
+    #   (b) こちらの抽出が改善して、前からあったものを読めるようになった
+    # 実際 beehiiv の Scale/Max は (b) だったのに「added」と公開してしまった。
+    # どちらでも真である「追跡し始めた」という言い方にする。
     if change.kind == KIND_ADDED:
         if change.after == 0:
-            # プラン名が "Free" のときに "a free Free tier" にならないようにする
-            if re.search(r"\bfree\b", change.plan, re.IGNORECASE):
-                return f"{name} added a free tier"
-            return f"{name} added a free {change.plan} tier"
-        return f"{name} added {change.plan} at {change.after_display}{unit}"
+            return f"Now tracking {name} {change.plan} — free"
+        return f"Now tracking {name} {change.plan} at {change.after_display}{unit}"
     if change.kind == KIND_REMOVED:
-        return f"{name} removed the {change.plan} plan"
+        # 消えた理由も同様に断定できない(掲載終了か、読めなくなったか)
+        return f"{name} {change.plan} is no longer listed"
     if change.kind == KIND_PAGE:
         # プラン単位まで特定できていないので断定しない。
         # 「値上げした」と書いて外れると、このサイトの存在意義が消える。
