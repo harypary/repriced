@@ -1,0 +1,103 @@
+name: 月次 抽出点検
+
+# 料金ページは予告なく作り替えられる。壊れてもサイト上は「価格が空欄」に
+# なるだけでエラーが出ないため、放っておくと静かに劣化していく。
+# 毎月1回だけ全ツールを点検し、前回より悪くなったものがあれば Issue で知らせる。
+#
+# 手元(日本)ではなくCI(米国)で走らせるのが要点。多くのSaaSはアクセス元の国で
+# 言語と通貨を変えるので、日本から点検すると本来と違う判定になる。
+
+on:
+  schedule:
+    # 毎月1日 UTC 08:00（JST 17:00）。日次の巡回(UTC 07:00)とずらして
+    # 同じホストへ短時間に二重にアクセスしないようにしている
+    - cron: "0 8 1 * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write   # data/check.json を次回の比較基準として保存する
+  issues: write     # 劣化を検出したときに知らせる
+
+concurrency:
+  group: check
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install --no-deps -r requirements.txt
+
+      - name: 抽出を点検する
+        id: check
+        run: |
+          set -o pipefail
+          # 失敗してもここでジョブを止めない。結果を Issue にする必要がある
+          python main.py --check --save-check 2>&1 | tee check-report.txt && ok=1 || ok=0
+          echo "ok=$ok" >> "$GITHUB_OUTPUT"
+          {
+            echo "## 抽出点検の結果"
+            echo '```'
+            cat check-report.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: 次回の比較基準を保存する
+        run: |
+          set -euo pipefail
+          git config user.name  "price-tracker[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/check.json
+          if git diff --cached --quiet; then
+            echo "点検結果に変化なし"
+            exit 0
+          fi
+          git commit -m "chore(check): 抽出状況を記録 $(date -u +%Y-%m)"
+          git push || echo "::warning::push できませんでした。次回再試行されます"
+
+      # 問題が無い月は何も通知しない。毎月Issueが立つと読まれなくなり、
+      # 本当に壊れた月に気づけなくなる。
+      - name: 劣化していたら Issue を立てる
+        if: steps.check.outputs.ok == '0'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          {
+            echo "月次点検で、価格を取得できないツールが見つかりました。"
+            echo ""
+            echo '```'
+            cat check-report.txt
+            echo '```'
+            echo ""
+            echo "### 直し方"
+            echo ""
+            echo "\`config/tools.yaml\` の該当ツールに \`patterns\` を書きます。"
+            echo "金額を捉えるグループを1つだけ含む正規表現です。"
+            echo ""
+            echo '```yaml'
+            echo "    patterns:"
+            echo "      Pro: 'name: Pro\\s*\\n\\s*price: \\\$?([\\d.]+)'"
+            echo '```'
+            echo ""
+            echo "直せない場合は、そのプランを \`plans\` から外してください。"
+            echo "値が取れないより、誤った値を載せる方が損害が大きいためです。"
+            echo ""
+            echo "手元で試すときは \`python main.py --check\`（\`--save-check\` は付けない）。"
+            echo "ただし日本から実行すると地域差で結果が変わる点に注意してください。"
+            echo ""
+            echo "_[実行ログ](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})_"
+          } > issue-body.md
+
+          gh issue create \
+            --repo "${{ github.repository }}" \
+            --title "抽出点検: 対応が必要なツールがあります ($(date -u +%Y-%m))" \
+            --label "maintenance" \
+            --body-file issue-body.md

@@ -1,7 +1,7 @@
 """AI価格トラッカーの自動生成パイプライン。
 
     python main.py --demo     # ネットワーク不要。合成した履歴で見た目を確認
-    python main.py --check    # 各ツールの価格抽出が壊れていないか点検(履歴は汚さない)
+    python main.py --check    # 価格抽出が壊れていないか点検し、前回と比較(履歴は汚さない)
     python main.py --render   # 取得をスキップし、既存の履歴からサイトだけ作り直す
     python main.py --verify   # 生成済みの docs/ を検査する。CIがデプロイ前に実行する
     python main.py            # 本番: 巡回して履歴に記録し、サイトを再生成
@@ -10,6 +10,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import logging
 import os
 import sys
@@ -20,7 +21,7 @@ import yaml
 from dotenv import load_dotenv
 
 from src.catalog import ConfigError, load_catalog
-from src.collect import check, collect
+from src.collect import check, collect, compare_checks
 from src.demo import build_demo_history
 from src.fetch import Fetcher
 from src.pages import build_compare_pages, build_feed, build_tool_pages
@@ -31,6 +32,8 @@ from src.verify import verify_site
 ROOT = Path(__file__).resolve().parent
 HISTORY = ROOT / "data" / "prices.jsonl"
 LATEST = ROOT / "data" / "latest.json"
+# 前回の点検結果。これと比べて「静かな劣化」を見つける
+CHECK_STATE = ROOT / "data" / "check.json"
 
 
 def parse_args() -> argparse.Namespace:
@@ -47,6 +50,11 @@ def parse_args() -> argparse.Namespace:
         "--record",
         action="store_true",
         help="価格履歴に書き込む。CI(米国)専用。手元から使うと観測地点が混ざる",
+    )
+    p.add_argument(
+        "--save-check",
+        action="store_true",
+        help="点検結果を data/check.json に保存する。次回の比較基準になる。CI専用",
     )
     return p.parse_args()
 
@@ -86,8 +94,34 @@ def main() -> int:
 
     # ---- 点検モード: サイトは作らない ----
     if args.check:
-        broken = check(catalog, fetcher())
-        return 1 if broken else 0
+        results = check(catalog, fetcher())
+
+        previous = {}
+        if CHECK_STATE.exists():
+            try:
+                previous = json.loads(CHECK_STATE.read_text(encoding="utf-8"))
+            except json.JSONDecodeError:
+                logging.warning("%s が壊れています。比較を省略します", CHECK_STATE.name)
+
+        degraded = compare_checks(previous, results)
+        if degraded:
+            print("\n⚠️  前回より悪化した項目:")
+            for line in degraded:
+                print(f"  - {line}")
+
+        if args.save_check:
+            CHECK_STATE.parent.mkdir(parents=True, exist_ok=True)
+            CHECK_STATE.write_text(
+                json.dumps(results, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+
+        broken = sum(1 for r in results.values() if r["status"] == "NG")
+        if broken or degraded:
+            print("\n❌ 対応が必要です。config/tools.yaml の patterns を確認してください。")
+            return 1
+        print("\n✅ 前回から悪化した項目はありません")
+        return 0
 
     # ---- 検査モード: 生成済みの docs/ を見るだけ ----
     if args.verify:

@@ -1,0 +1,125 @@
+{
+  "beehiiv": {
+    "detail": "mixed",
+    "expected": 3,
+    "missing": [
+      "Scale",
+      "Max"
+    ],
+    "resolved": 1,
+    "status": "PARTIAL"
+  },
+  "claude": {
+    "detail": "mixed",
+    "expected": 4,
+    "missing": [],
+    "resolved": 4,
+    "status": "OK"
+  },
+  "clickup": {
+    "detail": "mixed",
+    "expected": 3,
+    "missing": [],
+    "resolved": 3,
+    "status": "OK"
+  },
+  "copy-ai": {
+    "detail": "text",
+    "expected": 4,
+    "missing": [
+      "Starter",
+      "Advanced",
+      "Enterprise"
+    ],
+    "resolved": 1,
+    "status": "PARTIAL"
+  },
+  "cursor": {
+    "detail": "mixed",
+    "expected": 5,
+    "missing": [],
+    "resolved": 5,
+    "status": "OK"
+  },
+  "descript": {
+    "detail": "jsonld",
+    "expected": 4,
+    "missing": [],
+    "resolved": 4,
+    "status": "OK"
+  },
+  "elevenlabs": {
+    "detail": "mixed",
+    "expected": 5,
+    "missing": [],
+    "resolved": 5,
+    "status": "OK"
+  },
+  "framer": {
+    "detail": "jsonld",
+    "expected": 3,
+    "missing": [],
+    "resolved": 3,
+    "status": "OK"
+  },
+  "github-copilot": {
+    "detail": "mixed",
+    "expected": 3,
+    "missing": [],
+    "resolved": 3,
+    "status": "OK"
+  },
+  "jasper": {
+    "detail": "mixed",
+    "expected": 2,
+    "missing": [
+      "Business"
+    ],
+    "resolved": 1,
+    "status": "PARTIAL"
+  },
+  "kit": {
+    "detail": "text",
+    "expected": 3,
+    "missing": [],
+    "resolved": 3,
+    "status": "OK"
+  },
+  "monday": {
+    "detail": "mixed",
+    "expected": 5,
+    "missing": [
+      "Basic",
+      "Standard",
+      "Pro",
+      "Enterprise"
+    ],
+    "resolved": 1,
+    "status": "PARTIAL"
+  },
+  "notion": {
+    "detail": "embedded-json",
+    "expected": 4,
+    "missing": [
+      "Plus",
+      "Business",
+      "Enterprise"
+    ],
+    "resolved": 1,
+    "status": "PARTIAL"
+  },
+  "surfer-seo": {
+    "detail": "text",
+    "expected": 3,
+    "missing": [],
+    "resolved": 3,
+    "status": "OK"
+  },
+  "writesonic": {
+    "detail": "mixed",
+    "expected": 4,
+    "missing": [],
+    "resolved": 4,
+    "status": "OK"
+  }
+}

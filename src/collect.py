@@ -108,20 +108,33 @@ def collect(
     return latest, recorded, failed
 
 
-def check(catalog: Catalog, fetcher: Fetcher) -> int:
+# 状態の良し悪しの順序。前回より下がったかを判定するのに使う。
+STATUS_RANK = {"NG": 0, "PARTIAL": 1, "OK": 2}
+
+
+def check(catalog: Catalog, fetcher: Fetcher) -> dict[str, dict]:
     """--check 用。履歴を汚さずに、どのツールの抽出が壊れているかだけ報告する。
 
-    プラン名の表記変更や料金ページのURL変更は必ず起きる。それを早く見つけるための道具。
+    プラン名の表記変更や料金ページのURL変更は必ず起きる。しかもこの壊れ方は
+    サイト上では「価格が空欄」になるだけで、エラーも出さずに静かに進行する。
+    それを早く見つけるための道具。
+
+    戻り値は slug ごとの結果。前回分と比べて劣化を検出するのに使う。
     """
-    broken = 0
+    results: dict[str, dict] = {}
     print(f"{'slug':<16} {'status':<8} {'plans':<9} method")
     print("-" * 56)
 
     for tool in catalog.tools:
         result = fetcher.get(tool.pricing_url)
         if not result.ok:
-            broken += 1
             print(f"{tool.slug:<16} {'NG':<8} {'-':<9} {result.error}")
+            results[tool.slug] = {
+                "status": "NG",
+                "resolved": 0,
+                "expected": len(tool.plans),
+                "detail": result.error,
+            }
             continue
 
         extraction = extract(result.html, tool.plans, tool.patterns)
@@ -129,7 +142,6 @@ def check(catalog: Catalog, fetcher: Fetcher) -> int:
         ratio = f"{resolved}/{len(tool.plans)}"
 
         if not extraction.ok or resolved == 0:
-            broken += 1
             status = "NG"
         elif resolved < len(tool.plans):
             status = "PARTIAL"
@@ -145,9 +157,46 @@ def check(catalog: Catalog, fetcher: Fetcher) -> int:
         if missing and status != "NG":
             print(f"{'':<16} {'':<8} 未検出プラン: {', '.join(missing)}")
 
+        results[tool.slug] = {
+            "status": status,
+            "resolved": resolved,
+            "expected": len(tool.plans),
+            "detail": detail,
+            "missing": missing,
+        }
+
+    broken = sum(1 for r in results.values() if r["status"] == "NG")
     print("-" * 56)
     print(f"要対応: {broken} / {len(catalog.tools)} ツール")
-    return broken
+    return results
+
+
+def compare_checks(previous: dict[str, dict], current: dict[str, dict]) -> list[str]:
+    """前回の点検結果と比べて「悪くなった」ものだけを挙げる。
+
+    ずっと PARTIAL のままのツールを毎月通知しても読まれなくなるだけなので、
+    知らせる価値があるのは状態が下がった瞬間と、取れるプランが減った瞬間だけ。
+    """
+    degraded: list[str] = []
+    for slug, now in current.items():
+        was = previous.get(slug)
+        if not was:
+            continue  # 新しく追加したツールは劣化ではない
+        if STATUS_RANK[now["status"]] < STATUS_RANK[was["status"]]:
+            degraded.append(
+                f"{slug}: {was['status']} → {now['status']}"
+                f" ({now['resolved']}/{now['expected']}プラン) — {now['detail']}"
+            )
+        elif now["resolved"] < was["resolved"]:
+            degraded.append(
+                f"{slug}: 取得できるプランが {was['resolved']} → {now['resolved']} に減少"
+                f" — 未検出: {', '.join(now.get('missing') or []) or '不明'}"
+            )
+
+    for slug in previous:
+        if slug not in current:
+            continue  # 設定から外したツール。意図的なので通知しない
+    return degraded
 
 
 def snapshot_count(history: dict[str, list[Snapshot]]) -> int:

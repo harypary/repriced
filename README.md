@@ -255,6 +255,24 @@ python main.py --check
 - **外してある**: chatgpt, gemini, perplexity, grammarly, canva, midjourney, semrush, webflow
   （理由は [config/tools.yaml](config/tools.yaml) のコメントに個別に記載）
 
+### 劣化の検出は自動化されています
+
+料金ページの作り替えは必ず起きますが、その壊れ方は**サイト上では「価格が空欄」になるだけで
+エラーが出ません**。放置すると静かに劣化します。
+
+[check.yml](.github/workflows/check.yml) が**毎月1日**に全ツールを点検し、
+`data/check.json`（前回の状態）と比較して、**悪くなったものがあるときだけ Issue を立てます**。
+
+- 状態が下がった（`OK → PARTIAL` など）
+- 取得できるプラン数が減った
+
+ずっと `PARTIAL` のままのツールは通知しません。毎月Issueが立つと読まれなくなり、
+本当に壊れた月に気づけなくなるためです。**問題が無い月は何も届きません。**
+
+点検はCI（米国）で走ります。手元（日本）から `--check` しても構いませんが、
+地域差で結果が変わるので、判断は Issue の内容を基準にしてください。
+なお `--save-check`（比較基準の更新）はCI専用です。
+
 ### 精度を上げる方法 = このサイトの主なメンテ作業
 
 近傍探索が外れるツールは `patterns` で上書きします。Cursor が実例です。
